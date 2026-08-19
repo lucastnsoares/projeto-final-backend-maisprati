@@ -1,6 +1,6 @@
 package br.com.maisprati.projeto.model.entity;
 
-import br.com.maisprati.projeto.model.enums.Role;
+import br.com.maisprati.projeto.model.enums.Perfil;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -8,7 +8,7 @@ import java.util.Set;
 
 public class Usuario {
     private Long id;
-    private Set<Role> roles;
+    private Set<Perfil> perfil;
     private String nome;
     private String documento;
     private String email;
