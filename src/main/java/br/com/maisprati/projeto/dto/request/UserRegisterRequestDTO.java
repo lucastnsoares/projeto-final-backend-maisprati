@@ -3,7 +3,7 @@ package br.com.maisprati.projeto.dto.request;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
-public record PublicRegisterUserRequestDTO(
+public record UserRegisterRequestDTO(
         @NotBlank
         String name,
 

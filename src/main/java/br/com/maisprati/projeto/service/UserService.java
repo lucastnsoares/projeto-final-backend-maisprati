@@ -1,7 +1,7 @@
 package br.com.maisprati.projeto.service;
 
-import br.com.maisprati.projeto.dto.request.ChangePasswordRequestDTO;
-import br.com.maisprati.projeto.dto.response.UserDataResponseDTO;
+import br.com.maisprati.projeto.dto.request.UserChangePasswordRequestDTO;
+import br.com.maisprati.projeto.dto.response.UserResponseDTO;
 import br.com.maisprati.projeto.model.entity.User;
 import br.com.maisprati.projeto.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +16,7 @@ public class UserService {
     private final PasswordEncoder encoder;
 
     @Transactional
-    public void changePassword(User loggedInUser, ChangePasswordRequestDTO dto){
+    public void changePassword(User loggedInUser, UserChangePasswordRequestDTO dto){
         if(!encoder.matches(dto.currentPassword(), loggedInUser.getPasswordHash())){
             throw new IllegalArgumentException("A senha atual informada está incorreta");
         }
@@ -25,9 +25,9 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public UserDataResponseDTO userData(User loggedInUser) {
+    public UserResponseDTO userData(User loggedInUser) {
         User user = userRepository.findByEmail(loggedInUser.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado no banco de dados."));
-        return new UserDataResponseDTO(user);
+        return new UserResponseDTO(user);
     }
 }

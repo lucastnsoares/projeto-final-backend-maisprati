@@ -1,7 +1,7 @@
 package br.com.maisprati.projeto.controller;
 
-import br.com.maisprati.projeto.dto.request.ChangePasswordRequestDTO;
-import br.com.maisprati.projeto.dto.response.UserDataResponseDTO;
+import br.com.maisprati.projeto.dto.request.UserChangePasswordRequestDTO;
+import br.com.maisprati.projeto.dto.response.UserResponseDTO;
 import br.com.maisprati.projeto.model.entity.User;
 import br.com.maisprati.projeto.service.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,7 +19,7 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    public ResponseEntity<UserDataResponseDTO> userData(
+    public ResponseEntity<UserResponseDTO> userData(
             @AuthenticationPrincipal User loggedInUser
     ) {
         var data = userService.userData(loggedInUser);
@@ -28,7 +28,7 @@ public class UserController {
 
     @PatchMapping("/password")
     public ResponseEntity<Void> changePassword(
-            @RequestBody @Valid ChangePasswordRequestDTO dto,
+            @RequestBody @Valid UserChangePasswordRequestDTO dto,
             @AuthenticationPrincipal User loggedInUser){
         userService.changePassword(loggedInUser, dto);
         return ResponseEntity.noContent().build();

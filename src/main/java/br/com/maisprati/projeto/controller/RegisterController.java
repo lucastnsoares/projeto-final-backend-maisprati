@@ -1,7 +1,7 @@
 package br.com.maisprati.projeto.controller;
 
-import br.com.maisprati.projeto.dto.request.PublicRegisterUserRequestDTO;
-import br.com.maisprati.projeto.dto.response.UserDataPublicResponseDTO;
+import br.com.maisprati.projeto.dto.request.UserRegisterRequestDTO;
+import br.com.maisprati.projeto.dto.response.UserSummaryResponseDTO;
 import br.com.maisprati.projeto.service.RegisterUserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class RegisterController {
     private final RegisterUserService registerUserService;
 
-    @PostMapping("/public")
-    public ResponseEntity<UserDataPublicResponseDTO> registerUser(@RequestBody @Valid PublicRegisterUserRequestDTO dto) {
+    @PostMapping
+    public ResponseEntity<UserSummaryResponseDTO> registerUser(@RequestBody @Valid UserRegisterRequestDTO dto) {
         var userCreatedDTO = registerUserService.registerUserPublic(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(userCreatedDTO);
     }

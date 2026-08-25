@@ -1,9 +1,9 @@
 package br.com.maisprati.projeto.service;
 
-import br.com.maisprati.projeto.dto.request.AdminRegisterUserRequestDTO;
-import br.com.maisprati.projeto.dto.request.PublicRegisterUserRequestDTO;
-import br.com.maisprati.projeto.dto.response.UserDataPublicResponseDTO;
-import br.com.maisprati.projeto.dto.response.UserDataResponseDTO;
+import br.com.maisprati.projeto.dto.request.UserCreateRequestDTO;
+import br.com.maisprati.projeto.dto.request.UserRegisterRequestDTO;
+import br.com.maisprati.projeto.dto.response.UserSummaryResponseDTO;
+import br.com.maisprati.projeto.dto.response.UserResponseDTO;
 import br.com.maisprati.projeto.model.entity.User;
 import br.com.maisprati.projeto.model.enums.Role;
 import br.com.maisprati.projeto.repository.UserRepository;
@@ -21,7 +21,7 @@ public class RegisterUserService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public UserDataPublicResponseDTO registerUserPublic(PublicRegisterUserRequestDTO dto) {
+    public UserSummaryResponseDTO registerUserPublic(UserRegisterRequestDTO dto) {
         userExists(dto.email(),dto.document());
 
         User newUser = new User();
@@ -34,11 +34,11 @@ public class RegisterUserService {
 
         userRepository.save(newUser);
 
-        return new UserDataPublicResponseDTO(newUser);
+        return new UserSummaryResponseDTO(newUser);
     }
 
     @Transactional
-    public UserDataResponseDTO registerUserAdmin(AdminRegisterUserRequestDTO dto) {
+    public UserResponseDTO registerUserAdmin(UserCreateRequestDTO dto) {
         userExists(dto.email(),dto.document());
 
         User newUser = new User();
@@ -51,7 +51,7 @@ public class RegisterUserService {
 
         userRepository.save(newUser);
 
-        return new UserDataResponseDTO(newUser);
+        return new UserResponseDTO(newUser);
     }
 
 

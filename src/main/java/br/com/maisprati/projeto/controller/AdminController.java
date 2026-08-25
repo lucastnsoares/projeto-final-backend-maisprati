@@ -1,7 +1,8 @@
 package br.com.maisprati.projeto.controller;
 
-import br.com.maisprati.projeto.dto.request.AdminRegisterUserRequestDTO;
-import br.com.maisprati.projeto.dto.response.UserDataResponseDTO;
+import br.com.maisprati.projeto.dto.request.UserCreateRequestDTO;
+import br.com.maisprati.projeto.dto.request.UserUpdateRequestDTO;
+import br.com.maisprati.projeto.dto.response.UserResponseDTO;
 import br.com.maisprati.projeto.service.AdminService;
 import br.com.maisprati.projeto.service.RegisterUserService;
 import jakarta.validation.Valid;
@@ -28,7 +29,7 @@ public class AdminController {
 
 
     @GetMapping("/users")
-    public ResponseEntity<Page<UserDataResponseDTO>> listUsers(
+    public ResponseEntity<Page<UserResponseDTO>> listUsers(
             @ParameterObject
             @PageableDefault(page = 0, size = 10, sort = "name", direction = Sort.Direction.ASC)
             Pageable pageable) {
@@ -37,8 +38,8 @@ public class AdminController {
     }
 
     @PostMapping ("/users")
-    public ResponseEntity<UserDataResponseDTO> createUser(
-            @RequestBody @Valid AdminRegisterUserRequestDTO dto
+    public ResponseEntity<UserResponseDTO> createUser(
+            @RequestBody @Valid UserCreateRequestDTO dto
             ) {
         var newUser = registerUserService.registerUserAdmin(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
@@ -46,7 +47,7 @@ public class AdminController {
 
 
     @GetMapping("/users/{id}")
-    public ResponseEntity<UserDataResponseDTO> getUser(
+    public ResponseEntity<UserResponseDTO> getUser(
             @PathVariable Long id
     ) {
         var user = adminService.findById(id);
@@ -54,9 +55,9 @@ public class AdminController {
     }
 
     @PatchMapping("/users/{id}")
-    public ResponseEntity<UserDataResponseDTO> updateUser(
+    public ResponseEntity<UserResponseDTO> updateUser(
             @PathVariable Long id,
-            @RequestBody @Valid AdminRegisterUserRequestDTO dto
+            @RequestBody @Valid UserUpdateRequestDTO dto
     ) {
         var userUpdated = adminService.updateUser(dto, id);
         return ResponseEntity.status(HttpStatus.OK).body(userUpdated);

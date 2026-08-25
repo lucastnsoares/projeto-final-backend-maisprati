@@ -2,7 +2,7 @@ package br.com.maisprati.projeto.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 
-public record ChangePasswordRequestDTO(
+public record UserChangePasswordRequestDTO(
         @NotBlank
         String currentPassword,
 

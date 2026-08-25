@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotEmpty;
 
 import java.util.Set;
 
-public record AdminRegisterUserRequestDTO(
+public record UserCreateRequestDTO(
         @NotBlank
         String name,
 
