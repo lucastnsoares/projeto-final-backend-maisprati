@@ -1,6 +1,5 @@
 package br.com.maisprati.projeto.config.security;
 
-import br.com.maisprati.projeto.repository.UsuarioRepository;
 import br.com.maisprati.projeto.service.TokenService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -18,24 +17,22 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class SecurityFilter extends OncePerRequestFilter {
     private final TokenService tokenService;
-    private final UsuarioRepository usuarioRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        var token = recuperarToken(request);
+        var token = recoverToken(request);
         if (token != null) {
-            var email = tokenService.validarToken(token);
-            var usuario = usuarioRepository.findByEmail(email).orElse(null);
+            var user = tokenService.getUserFromToken(token);
 
-            if (usuario != null) {
-                var authentication = new UsernamePasswordAuthenticationToken(usuario, null, usuario.getAuthorities());
+            if (user != null) {
+                var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         }
         filterChain.doFilter(request, response);
     }
 
-    private String recuperarToken(HttpServletRequest request) {
+    private String recoverToken(HttpServletRequest request) {
         var authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) return null;
         return authHeader.replace("Bearer ", "");

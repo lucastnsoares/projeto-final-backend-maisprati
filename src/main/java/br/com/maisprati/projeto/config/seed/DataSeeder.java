@@ -1,8 +1,8 @@
 package br.com.maisprati.projeto.config.seed;
 
-import br.com.maisprati.projeto.model.entity.Usuario;
-import br.com.maisprati.projeto.model.enums.Perfil;
-import br.com.maisprati.projeto.repository.UsuarioRepository;
+import br.com.maisprati.projeto.model.entity.User;
+import br.com.maisprati.projeto.model.enums.Role;
+import br.com.maisprati.projeto.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
@@ -18,42 +18,45 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class DataSeeder implements CommandLineRunner {
 
-    private final UsuarioRepository usuarioRepository;
+    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public void run(String... args) throws Exception {
-        List<Usuario> usuariosParaSalvar = new ArrayList<>();
+    public void run(String... args){
 
-        // Cria usuario admin
-        if (!usuarioRepository.existsByEmail("admin1@email.com")) {
-            Usuario admin = new Usuario();
-            admin.setNome("Admin 1");
-            admin.setDocumento("00000000001");
+        System.out.println("Timezone: " + java.time.ZoneId.systemDefault());
+        System.out.println("Data/hora: " + java.time.LocalDateTime.now());
+        List<User> usersToSave = new ArrayList<>();
+
+        // Cria usuário admin
+        if (!userRepository.existsByEmail("admin1@email.com")) {
+            User admin = new User();
+            admin.setName("Admin 1");
+            admin.setDocument("00000000001");
             admin.setEmail("admin1@email.com");
-            admin.setSenha(passwordEncoder.encode("123456"));
-            admin.setPerfil(Set.of(Perfil.ADMIN));
-            admin.setAtivo(true);
+            admin.setPasswordHash(passwordEncoder.encode("123456"));
+            admin.setRole(Set.of(Role.ADMIN));
+            admin.setActive(true);
 
-            usuariosParaSalvar.add(admin);
+            usersToSave.add(admin);
         }
 
-        // Cria gerente ponto coleta
-        if (!usuarioRepository.existsByEmail("gerentepontocoleta1@email.com")) {
-            Usuario gerente = new Usuario();
-            gerente.setNome("Gerente Ponto Coleta 1");
-            gerente.setDocumento("00000000002");
-            gerente.setEmail("gerentepontocoleta1@email.com");
-            gerente.setSenha(passwordEncoder.encode("123456"));
-            gerente.setPerfil(Set.of(Perfil.GERENTE_PONTO_COLETA));
-            gerente.setAtivo(true);
+        // Cria usuário doador
+        if (!userRepository.existsByEmail("usuariodoador1@email.com")) {
+            User user = new User();
+            user.setName("Usuario Doador 1");
+            user.setDocument("00000000002");
+            user.setEmail("usuariodoador1@email.com");
+            user.setPasswordHash(passwordEncoder.encode("123456"));
+            user.setRole(Set.of(Role.DOADOR));
+            user.setActive(true);
 
-            usuariosParaSalvar.add(gerente);
+            usersToSave.add(user);
         }
 
         // 3. Salva no banco apenas os que foram adicionados na lista
-        if (!usuariosParaSalvar.isEmpty()) {
-            usuarioRepository.saveAll(usuariosParaSalvar);
+        if (!usersToSave.isEmpty()) {
+            userRepository.saveAll(usersToSave);
             System.out.println("************ Usuários de teste criados com sucesso! ************");
         }
     }

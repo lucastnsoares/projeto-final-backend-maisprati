@@ -38,8 +38,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Libera o acesso à documentação do Swagger para visualização
                         .requestMatchers("/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        .requestMatchers("/api/teste/publico").permitAll()
-                        .requestMatchers("/api/auth/login").permitAll()
+                        .requestMatchers("/test/public").permitAll()
+                        .requestMatchers("/auth/login", "/register/public").permitAll()
                         .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated()
                 )

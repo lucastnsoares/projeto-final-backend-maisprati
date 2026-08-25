@@ -8,21 +8,21 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @Profile("dev")
-@RequestMapping("/api/teste")
-public class TesteController {
-    @GetMapping("/publico")
-    public String rotaPublica(){
+@RequestMapping("/test")
+public class TestController {
+    @GetMapping("/public")
+    public String publicRoute(){
         return "Você está em um endpoint público.";
     }
 
-    @GetMapping("/restrito")
-    public String rotaAutenticada(){
+    @GetMapping("/restrict")
+    public String authenticatedRoute(){
         return "Você está em uma rota autenticada.";
     }
 
-    @GetMapping("/admin")
+    @GetMapping("/restrict/admin")
     @PreAuthorize("hasRole('ADMIN')")
-    public String rotaApenasAdmin() {
+    public String onlyAdminRoute() {
         return "Você está em uma rota autenticada. APENAS ADMINISTRADORES.";
     }
 }
