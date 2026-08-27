@@ -55,9 +55,9 @@ public class TokenService {
     }
 
     public User getUserFromToken(String token) {
-        Algorithm algoritmo = Algorithm.HMAC256(secretKey);
+        Algorithm algorithm = Algorithm.HMAC256(secretKey);
         try {
-            var verifier = JWT.require(algoritmo)
+            var verifier = JWT.require(algorithm)
                     .withIssuer("api-projeto-mais-pra-ti")
                     .build()
                     .verify(token);

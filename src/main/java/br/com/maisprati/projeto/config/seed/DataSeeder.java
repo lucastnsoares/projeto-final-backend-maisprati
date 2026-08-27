@@ -22,39 +22,36 @@ public class DataSeeder implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public void run(String... args){
-
-        System.out.println("Timezone: " + java.time.ZoneId.systemDefault());
-        System.out.println("Data/hora: " + java.time.LocalDateTime.now());
+    public void run(String... args) {
         List<User> usersToSave = new ArrayList<>();
 
-        // Cria usuário admin
-        if (!userRepository.existsByEmail("admin1@email.com")) {
+        // 1. Cria usuário Administrador
+        if (!userRepository.existsByEmail("admin@projeto.com.br")) {
             User admin = new User();
-            admin.setName("Admin 1");
-            admin.setDocument("00000000001");
-            admin.setEmail("admin1@email.com");
-            admin.setPasswordHash(passwordEncoder.encode("123456"));
+            admin.setName("ADMINISTRADOR DO SISTEMA");
+            admin.setDocument("52998224725"); // CPF válido
+            admin.setEmail("admin@projeto.com.br");
+            admin.setPhone("+5531987654321");
+            admin.setPasswordHash(passwordEncoder.encode("Admin@123456"));
             admin.setRole(Set.of(Role.ADMIN));
             admin.setActive(true);
-
             usersToSave.add(admin);
         }
 
-        // Cria usuário doador
-        if (!userRepository.existsByEmail("usuariodoador1@email.com")) {
-            User user = new User();
-            user.setName("Usuario Doador 1");
-            user.setDocument("00000000002");
-            user.setEmail("usuariodoador1@email.com");
-            user.setPasswordHash(passwordEncoder.encode("123456"));
-            user.setRole(Set.of(Role.DOADOR));
-            user.setActive(true);
-
-            usersToSave.add(user);
+        // 2. Cria usuário Doador (usuário padrão)
+        if (!userRepository.existsByEmail("doador@projeto.com.br")) {
+            User doador = new User();
+            doador.setName("USUARIO DOADOR TESTE");
+            doador.setDocument("11144477735");
+            doador.setEmail("doador@projeto.com.br");
+            doador.setPhone("+5511912345678");
+            doador.setPasswordHash(passwordEncoder.encode("Doador@123456"));
+            doador.setRole(Set.of(Role.DOADOR));
+            doador.setActive(true);
+            usersToSave.add(doador);
         }
 
-        // 3. Salva no banco apenas os que foram adicionados na lista
+        // 3. Salva no banco
         if (!usersToSave.isEmpty()) {
             userRepository.saveAll(usersToSave);
             System.out.println("************ Usuários de teste criados com sucesso! ************");

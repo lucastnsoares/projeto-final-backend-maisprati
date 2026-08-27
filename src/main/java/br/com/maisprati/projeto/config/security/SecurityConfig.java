@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -28,28 +29,41 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    // configuração das rotas
+    // Configuração do filtro de segurança
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // Configuração das rotas
-                .authorizeHttpRequests(auth -> auth
-                        // Libera o acesso à documentação do Swagger para visualização
-                        .requestMatchers("/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        .requestMatchers("/test/public").permitAll()
-                        .requestMatchers("/auth/login", "/register/public").permitAll()
-                        .requestMatchers("/error").permitAll()
-                        .anyRequest().authenticated()
-                )
-                .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
-
-        return http.build();
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) {
+        try {
+            http
+                    .cors(Customizer.withDefaults())
+                    .csrf(csrf -> csrf.disable())
+                    .sessionManagement(
+                            sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                    .exceptionHandling(exception -> exception
+                            .authenticationEntryPoint((request, response, authException) -> {
+                                response.setContentType("application/json;charset=UTF-8");
+                                response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
+                                response.getWriter().write(String.format(
+                                        "{\"timestamp\":\"%s\",\"status\":401,\"error\":\"Unauthorized\",\"message\":\"Token de autenticação ausente ou inválido.\",\"path\":\"%s\"}",
+                                        java.time.Instant.now(), request.getRequestURI()
+                                ));
+                            })
+                    )
+                    // Configuração das rotas
+                    .authorizeHttpRequests(auth -> auth
+                            .requestMatchers("/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                            .requestMatchers("/test/public").permitAll()
+                            .requestMatchers("/auth/**", "/register", "/register/**").permitAll()
+                            .requestMatchers("/error").permitAll()
+                            .anyRequest().authenticated())
+                    .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
+            return http.build();
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao configurar segurança", e);
+        }
     }
-    
+
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config){
         return config.getAuthenticationManager();
     }
 }

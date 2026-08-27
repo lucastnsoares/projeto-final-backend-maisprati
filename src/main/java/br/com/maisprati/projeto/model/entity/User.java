@@ -42,7 +42,7 @@ public class User implements UserDetails {
     @Column(length = 120, nullable = false, unique = true)
     private String email;
 
-    @Column(length = 64, nullable = false)
+    @Column(name="password_hash", length = 64)
     private String passwordHash;
 
     @Column(length = 20)

@@ -11,12 +11,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/test")
 public class TestController {
     @GetMapping("/public")
-    public String publicRoute(){
+    public String publicRoute() {
         return "Você está em um endpoint público.";
     }
 
     @GetMapping("/restrict")
-    public String authenticatedRoute(){
+    public String authenticatedRoute() {
         return "Você está em uma rota autenticada.";
     }
 
