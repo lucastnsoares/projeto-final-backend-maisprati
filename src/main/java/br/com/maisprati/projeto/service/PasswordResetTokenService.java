@@ -65,7 +65,7 @@ public class PasswordResetTokenService {
             throw new IllegalArgumentException("Token inválido.");
         }
         User user =  tokenData.getUser();
-        user.setPasswordHash(passwordEncoder.encode(dto.newPassword()));
+        user.setEncodedPassword(dto.newPassword(), passwordEncoder);
         userRepository.saveAndFlush(user);
         passwordResetTokenRepository.delete(tokenData);
     }

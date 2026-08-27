@@ -8,6 +8,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.Instant;
 import java.util.Collection;
@@ -26,7 +27,7 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "users_roles", joinColumns = @JoinColumn(name = "user_id"))
     @Enumerated(EnumType.STRING)
     @Column(name = "role", length = 60, nullable = false)
@@ -43,6 +44,7 @@ public class User implements UserDetails {
     private String email;
 
     @Column(name="password_hash", length = 64)
+    @Setter(AccessLevel.NONE)
     private String passwordHash;
 
     @Column(length = 20)
@@ -97,5 +99,15 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return this.active;
+    }
+
+    public void setEncodedPassword(String rawPassword, PasswordEncoder passwordEncoder) {
+        if (rawPassword == null || rawPassword.isBlank()) {
+            throw new IllegalArgumentException("A senha não pode estar em branco.");
+        }
+        if(rawPassword.length() < 6) {
+            throw new IllegalArgumentException("A senha deve possuir no mínimo 6 caracteres.");
+        }
+        this.passwordHash = passwordEncoder.encode(rawPassword);
     }
 }

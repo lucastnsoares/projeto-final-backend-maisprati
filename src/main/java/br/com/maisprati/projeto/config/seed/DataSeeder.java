@@ -32,7 +32,7 @@ public class DataSeeder implements CommandLineRunner {
             admin.setDocument("52998224725"); // CPF válido
             admin.setEmail("admin@projeto.com.br");
             admin.setPhone("+5531987654321");
-            admin.setPasswordHash(passwordEncoder.encode("Admin@123456"));
+            admin.setEncodedPassword("Admin@123456", passwordEncoder);
             admin.setRole(Set.of(Role.ADMIN));
             admin.setActive(true);
             usersToSave.add(admin);
@@ -45,7 +45,7 @@ public class DataSeeder implements CommandLineRunner {
             doador.setDocument("11144477735");
             doador.setEmail("doador@projeto.com.br");
             doador.setPhone("+5511912345678");
-            doador.setPasswordHash(passwordEncoder.encode("Doador@123456"));
+            doador.setEncodedPassword("Doador@123456", passwordEncoder);
             doador.setRole(Set.of(Role.DOADOR));
             doador.setActive(true);
             usersToSave.add(doador);
