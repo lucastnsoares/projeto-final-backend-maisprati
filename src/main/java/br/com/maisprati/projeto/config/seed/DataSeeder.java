@@ -26,7 +26,7 @@ public class DataSeeder implements CommandLineRunner {
         List<User> usersToSave = new ArrayList<>();
 
         // 1. Cria usuário Administrador
-        if (!userRepository.existsByEmail("admin@projeto.com.br")) {
+        if (!userRepository.existsByEmail("admin@projeto.com.br") && !userRepository.existsByDocument("52998224725")) {
             User admin = new User();
             admin.setName("ADMINISTRADOR DO SISTEMA");
             admin.setDocument("52998224725"); // CPF válido
@@ -39,7 +39,7 @@ public class DataSeeder implements CommandLineRunner {
         }
 
         // 2. Cria usuário Doador (usuário padrão)
-        if (!userRepository.existsByEmail("doador@projeto.com.br")) {
+        if (!userRepository.existsByEmail("doador@projeto.com.br") && !userRepository.existsByDocument("11144477735")) {
             User doador = new User();
             doador.setName("USUARIO DOADOR TESTE");
             doador.setDocument("11144477735");
