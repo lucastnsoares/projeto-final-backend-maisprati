@@ -24,6 +24,9 @@ public record UserResponseDTO(
         @Schema(description = "Telefone formatado em E.164", example = "+5531987654321")
         String phone,
 
+        @Schema(description = "Status do usuário", example = "true")
+        Boolean active,
+
         @Schema(description = "Perfis associados ao usuário", example = "[\"DOADOR\"]")
         Set<Role> roles,
 
@@ -41,6 +44,7 @@ public record UserResponseDTO(
                 user.getDocument(),
                 user.getEmail(),
                 user.getPhone(),
+                user.getActive(),
                 user.getRole(),
                 user.getCreatedAt(),
                 user.getUpdatedAt()
