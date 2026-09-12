@@ -13,7 +13,7 @@ services:
       POSTGRES_INITDB_ARGS: "-E UTF8 --locale=en_US.UTF-8"
 
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "5433:5432"
 
     volumes:
       - postgres_data:/var/lib/postgresql/data
