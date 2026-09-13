@@ -1,6 +1,7 @@
 package br.com.maisprati.projeto.controller;
 
 import br.com.maisprati.projeto.dto.request.ClothTypeRequestDTO;
+import br.com.maisprati.projeto.dto.request.ClothTypeUpdateRequestDTO;
 import br.com.maisprati.projeto.dto.response.ClothTypeResponseDTO;
 import br.com.maisprati.projeto.service.ClothTypeService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -27,11 +28,7 @@ public class ClothTypeController {
     private final ClothTypeService clothTypeService;
 
     @GetMapping
-    public ResponseEntity<Page<ClothTypeResponseDTO>> getClothTypes(
-            @ParameterObject
-            @PageableDefault(page = 0, size = 10, sort = "name", direction = Sort.Direction.ASC)
-            Pageable pageable
-    ){
+    public ResponseEntity<Page<ClothTypeResponseDTO>> getClothTypes(@ParameterObject @PageableDefault(page = 0, size = 10, sort = "name", direction = Sort.Direction.ASC) Pageable pageable) {
         var page = clothTypeService.findAll(pageable);
         return ResponseEntity.ok(page);
     }
@@ -45,4 +42,12 @@ public class ClothTypeController {
     public ResponseEntity<ClothTypeResponseDTO> createClothType(@RequestBody @Valid ClothTypeRequestDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(clothTypeService.createClothType(dto));
     }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<ClothTypeResponseDTO> updateClothType(
+            @PathVariable Long id,
+            @RequestBody @Valid ClothTypeUpdateRequestDTO dto) {
+        return ResponseEntity.ok(clothTypeService.updateClothType(id, dto));
+    }
+
 }

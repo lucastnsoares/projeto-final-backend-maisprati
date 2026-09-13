@@ -1,6 +1,7 @@
 package br.com.maisprati.projeto.service;
 
 import br.com.maisprati.projeto.dto.request.ClothTypeRequestDTO;
+import br.com.maisprati.projeto.dto.request.ClothTypeUpdateRequestDTO;
 import br.com.maisprati.projeto.dto.response.ClothTypeResponseDTO;
 import br.com.maisprati.projeto.model.entity.ClothType;
 import br.com.maisprati.projeto.repository.ClothTypeRepository;
@@ -32,8 +33,8 @@ public class ClothTypeService {
         }
 
         ClothType newClothType = new ClothType();
-        newClothType.setName(dto.name());
-        newClothType.setDescription(dto.description());
+        newClothType.setName(dto.name().trim());
+        newClothType.setDescription(dto.description().trim());
         clothTypeRepository.save(newClothType);
 
         return new ClothTypeResponseDTO(newClothType);
@@ -43,6 +44,27 @@ public class ClothTypeService {
     public ClothTypeResponseDTO findById(Long id) {
         ClothType clothType = clothTypeRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Tipo de tecido não localizado"));
+        return new ClothTypeResponseDTO(clothType);
+    }
+
+    @Transactional
+    public ClothTypeResponseDTO updateClothType(Long id, ClothTypeUpdateRequestDTO dto) {
+        ClothType clothType = clothTypeRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Tipo de tecido não localizado."));
+
+        if (dto.name() != null && !dto.name().isBlank()) {
+            if (clothTypeRepository.existsByNameIgnoreCaseAndIdNot(dto.name(), clothType.getId())) {
+                throw new IllegalArgumentException("Tecido já existente.");
+            }
+            clothType.setName(dto.name().trim());
+        }
+        if (dto.description() != null && !dto.description().isBlank()) {
+            clothType.setDescription(dto.description().trim());
+        }
+        if (dto.isActive() != null) {
+            clothType.setActive(dto.isActive());
+        }
+        clothTypeRepository.save(clothType);
         return new ClothTypeResponseDTO(clothType);
     }
 }

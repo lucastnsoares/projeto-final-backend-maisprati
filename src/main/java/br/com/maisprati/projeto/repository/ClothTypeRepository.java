@@ -9,5 +9,8 @@ import org.springframework.data.domain.Pageable;
 @Repository
 public interface ClothTypeRepository extends JpaRepository<ClothType, Long> {
     Page<ClothType> findAll(Pageable pageable);
+
     boolean existsByName(String name);
+
+    boolean existsByNameIgnoreCaseAndIdNot(String name, Long id);
 }
