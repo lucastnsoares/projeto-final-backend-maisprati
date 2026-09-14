@@ -4,6 +4,7 @@ import br.com.maisprati.projeto.dto.response.ErrorResponseDTO;
 import br.com.maisprati.projeto.dto.response.FieldErrorDTO;
 import br.com.maisprati.projeto.dto.response.ValidationErrorResponseDTO;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -104,6 +105,20 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value(),
                 HttpStatus.BAD_REQUEST.getReasonPhrase(),
                 ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(PropertyReferenceException.class)
+    public ResponseEntity<ErrorResponseDTO> handlePropertyReferenceException(
+            PropertyReferenceException ex,
+            HttpServletRequest request){
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                Instant.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                String.format("O parâmetro '%s' não existe para ordenação ou consulta", ex.getPropertyName()),
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
