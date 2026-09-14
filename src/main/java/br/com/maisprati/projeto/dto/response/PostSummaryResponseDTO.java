@@ -1,14 +1,15 @@
 package br.com.maisprati.projeto.dto.response;
-import br.com.maisprati.projeto.model.entity.Post;
-import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public record PostResponseDTO(
-        @Schema(description = "Identificador único do conteúdo", example = "1")
+import br.com.maisprati.projeto.model.entity.Post;
+import io.swagger.v3.oas.annotations.media.Schema;
+
+public record PostSummaryResponseDTO(
+    @Schema(description = "Identificador único do conteúdo", example = "1")
         Long id,
 
         @Schema(description = "Slug do artigo", example = "como-reaproveitar-retalhos-de-jeans")
@@ -19,9 +20,6 @@ public record PostResponseDTO(
 
         @Schema(description = "Resumo introdutório em linguagem simples e acessível", example = "Aprenda técnicas práticas para transformar sobras de tecido jeans em ecobags e organizadores.")
         String summary,
-
-        @Schema(description = "Conteúdo completo do artigo (Markdown ou texto estruturado)", example = "## Materiais necessários\n- Retalhos de jeans\n- Linha e agulha...")
-        String body,
 
         @Schema(description = "Nome da categoria associada ao artigo", example = "Upcycling")
         String categoryName,
@@ -39,35 +37,22 @@ public record PostResponseDTO(
         Set<ClothTypeSummaryResponseDTO> clothTypes,
 
         @Schema(description = "Data de criação do registro", example = "2026-08-26T22:00:00Z")
-        Instant createdAt,
-
-        @Schema(description = "Data de atualização do registro", example = "2026-08-26T22:00:00Z")
-        Instant updatedAt,
-
-        @Schema(description = "Nome do usuário que criou o conteúdo", example = "João da Silva")
-        String createdByName,
-
-        @Schema(description = "Indica se o artigo está publicado ou não", example = "true")
-        Boolean isPublished
+        Instant createdAt
 ) {
-    public PostResponseDTO(Post post) {
+    public PostSummaryResponseDTO(Post post) {
         this(
-                post.getId(),
-                post.getSlug(),
-                post.getTitle(),
-                post.getSummary(),
-                post.getBody(),
-                post.getCategory() != null ? post.getCategory().getName() : null,
-                post.getCoverImageUrl(),
-                post.getCoverImageAlt(),
-                post.getTags(),
-                post.getClothTypes() != null
-                        ? post.getClothTypes().stream().map(ClothTypeSummaryResponseDTO::new).collect(Collectors.toSet())
-                        : Collections.emptySet(),
-                post.getCreatedAt(),
-                post.getUpdatedAt(),
-                post.getCreatedBy() != null ? post.getCreatedBy().getName() : null,
-                post.isPublished()
+            post.getId(), 
+            post.getSlug(),
+            post.getTitle(),
+            post.getSummary(),
+            post.getCategory() != null ? post.getCategory().getName() : "",
+            post.getCoverImageUrl() != null ? post.getCoverImageUrl() : "",
+            post.getCoverImageAlt() != null ? post.getCoverImageAlt() : "",
+            post.getTags(),
+            post.getClothTypes() != null ? post.getClothTypes().stream()
+                .map(ClothTypeSummaryResponseDTO::new)
+                .collect(Collectors.toSet()) : Collections.emptySet(),
+            post.getCreatedAt()
         );
     }
 }

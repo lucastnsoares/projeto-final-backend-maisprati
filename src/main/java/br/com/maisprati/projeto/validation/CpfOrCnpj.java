@@ -2,7 +2,6 @@ package br.com.maisprati.projeto.validation;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
-import org.hibernate.validator.internal.constraintvalidators.hv.br.CPFValidator;
 
 import java.lang.annotation.*;
 

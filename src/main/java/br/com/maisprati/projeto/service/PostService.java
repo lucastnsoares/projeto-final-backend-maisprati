@@ -1,7 +1,9 @@
 package br.com.maisprati.projeto.service;
 
 import br.com.maisprati.projeto.dto.request.PostCreateRequestDTO;
+import br.com.maisprati.projeto.dto.request.PostEditRequestDTO;
 import br.com.maisprati.projeto.dto.response.PostResponseDTO;
+import br.com.maisprati.projeto.dto.response.PostSummaryResponseDTO;
 import br.com.maisprati.projeto.model.entity.Category;
 import br.com.maisprati.projeto.model.entity.ClothType;
 import br.com.maisprati.projeto.model.entity.Post;
@@ -10,6 +12,7 @@ import br.com.maisprati.projeto.repository.CategoryRepository;
 import br.com.maisprati.projeto.repository.ClothTypeRepository;
 import br.com.maisprati.projeto.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -65,15 +68,77 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public Page<PostResponseDTO> findAll(Pageable pageable) {
-        return postRepository.findAll(pageable)
-                .map(PostResponseDTO::new);
+    public Page<PostSummaryResponseDTO> findAllByPublishedTrue(Long categoryId, Pageable pageable) {
+        return postRepository.findAllPublishedWithCategoryFilter(categoryId, pageable)
+                .map(PostSummaryResponseDTO::new);
     }
 
     @Transactional(readOnly = true)
-    public PostResponseDTO findPostById(Long id) {
+    public PostResponseDTO findPostByIdAndIsPublishedTrue(Long id) {
+        Post post = postRepository.findByIdAndIsPublishedTrue(id)
+                .orElseThrow(() -> new IllegalArgumentException("Post inexistente ou não disponível."));
+        return new PostResponseDTO(post);
+    }
+
+    //Apenas admin
+    @Transactional(readOnly = true)
+    public Page<PostSummaryResponseDTO> findAllPosts(Long categoryId, Pageable pageable) {
+        return postRepository.findAllWithCategoryFilter(categoryId, pageable)
+                .map(PostSummaryResponseDTO::new);
+    }
+
+    //Apenas admin
+    @Transactional
+    public PostResponseDTO updatePost(Long id, PostEditRequestDTO dto) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Post inexistente."));
+
+        String targetImageUrl = dto.coverImageUrl() != null ? dto.coverImageUrl().trim() : post.getCoverImageUrl();
+        String targetImageAlt = dto.coverImageAlt() != null ? dto.coverImageAlt().trim() : post.getCoverImageAlt();
+        validateAccessibilityAndCoverImage(targetImageUrl, targetImageAlt);
+        
+        if (dto.title() != null && !dto.title().isBlank()) {
+            post.setTitle(dto.title().trim());
+            String newSlug = generateUniqueSlug(dto.title());
+            post.setSlug(newSlug);
+        }
+        if (dto.summary() != null && !dto.summary().isBlank()) {
+            post.setSummary(dto.summary().trim());
+        }
+        if (dto.body() != null && !dto.body().isBlank()) {
+            post.setBody(dto.body().trim());
+        }
+        if (dto.coverImageUrl() != null && !dto.coverImageUrl().isBlank()) {
+            post.setCoverImageUrl(dto.coverImageUrl().trim());
+        }
+        if (dto.coverImageAlt() != null && !dto.coverImageAlt().isBlank()) {
+            post.setCoverImageAlt(dto.coverImageAlt().trim());
+        }
+        if (dto.categoryId() != null) {
+            Category category = categoryRepository.findById(dto.categoryId())
+                    .orElseThrow(() -> new IllegalArgumentException("Categoria informada não foi encontrada."));
+            post.setCategory(category);
+        }
+        if (dto.clothTypeIds() != null) {
+            Set<ClothType> clothTypes = resolveClothTypes(dto.clothTypeIds());
+            post.setClothTypes(clothTypes);
+        }
+        if (dto.tags() != null) {
+            Set<String> sanitizedTags = sanitizeTags(dto.tags());
+            post.setTags(sanitizedTags);
+        }
+        if (dto.isPublished() != null) {
+            post.setPublished(dto.isPublished());
+        }
+        Post updatedPost = postRepository.save(post);
+        return new PostResponseDTO(updatedPost);
+    }
+
+    //apenas ADMIN
+    @Transactional(readOnly = true)
+    public PostResponseDTO findPostById(Long id) {
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Post inexistente ou não disponível."));
         return new PostResponseDTO(post);
     }
 
