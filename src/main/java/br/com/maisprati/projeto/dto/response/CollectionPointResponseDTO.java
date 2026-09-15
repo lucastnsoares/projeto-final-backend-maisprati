@@ -1,5 +1,6 @@
 package br.com.maisprati.projeto.dto.response;
 
+import br.com.maisprati.projeto.model.enums.CollectionPointStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
@@ -21,8 +22,8 @@ public class CollectionPointResponseDTO {
     @Schema(description = "Status de pendência de aprovação", example = "true")
     private boolean isPending;
 
-    @Schema(description = "Status de ativação no sistema", example = "false")
-    private boolean isActive;
+    @Schema(description = "Status do ponto de coleta no sistema", example = "ACTIVE")
+    private CollectionPointStatus status;
 
     private AddressResponseDTO address;
 

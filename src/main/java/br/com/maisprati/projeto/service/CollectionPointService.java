@@ -7,6 +7,7 @@ import br.com.maisprati.projeto.model.entity.ClothType;
 import br.com.maisprati.projeto.model.entity.CollectionPoint;
 import br.com.maisprati.projeto.model.entity.OperatingHour;
 import br.com.maisprati.projeto.model.entity.User;
+import br.com.maisprati.projeto.model.enums.CollectionPointStatus;
 import br.com.maisprati.projeto.model.enums.State;
 import br.com.maisprati.projeto.repository.ClothTypeRepository;
 import br.com.maisprati.projeto.repository.CollectionPointRepository;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,24 +45,23 @@ public class CollectionPointService {
         }
 
         Address address = Address.builder()
-                .street(dto.getAddress().getStreet())
-                .number(dto.getAddress().getNumber())
-                .complement(dto.getAddress().getComplement())
-                .neighborhood(dto.getAddress().getNeighborhood())
-                .city(dto.getAddress().getCity())
-                .state(State.valueOf(dto.getAddress().getState().toUpperCase()))
-                .country(dto.getAddress().getCountry())
-                .zipCode(dto.getAddress().getZipCode())
+                .street(dto.getAddress().getStreet().trim().toUpperCase(Locale.ROOT))
+                .number(dto.getAddress().getNumber().trim().toUpperCase(Locale.ROOT))
+                .complement(dto.getAddress().getComplement().trim().toUpperCase(Locale.ROOT))
+                .neighborhood(dto.getAddress().getNeighborhood().trim().toUpperCase(Locale.ROOT))
+                .city(dto.getAddress().getCity().trim().toUpperCase(Locale.ROOT))
+                .state(State.valueOf(dto.getAddress().getState().trim().toUpperCase()))
+                .country(dto.getAddress().getCountry().trim().toLowerCase(Locale.ROOT))
+                .zipCode(dto.getAddress().getZipCode().trim())
                 .latitude(dto.getLatitude())
                 .longitude(dto.getLongitude())
                 .build();
 
         CollectionPoint collectionPoint = CollectionPoint.builder()
-                .name(dto.getName())
+                .name(dto.getName().trim())
                 .address(address)
-                .pointPictureUrl(dto.getImageUrl())
-                .isPending(true)
-                .isActive(false)
+                .pointPictureUrl(dto.getImageUrl().trim())
+                .status(CollectionPointStatus.PENDING)
                 .managers(new HashSet<>())
                 .clothTypes(new HashSet<>())
                 .operatingHours(new HashSet<>())
@@ -92,8 +93,7 @@ public class CollectionPointService {
         return CollectionPointResponseDTO.builder()
                 .id(entity.getId())
                 .name(entity.getName())
-                .isPending(entity.isPending())
-                .isActive(entity.isActive())
+                .status(entity.getStatus())
                 .pointPictureUrl(entity.getPointPictureUrl())
                 .address(CollectionPointResponseDTO.AddressResponseDTO.builder()
                         .street(addr.getStreet())

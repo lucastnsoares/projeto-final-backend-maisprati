@@ -1,5 +1,6 @@
 package br.com.maisprati.projeto.model.entity;
 
+import br.com.maisprati.projeto.model.enums.CollectionPointStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -63,11 +64,9 @@ public class CollectionPoint {
     @Column(name = "point_picture_url", length = 2048)
     private String pointPictureUrl;
 
-    @Column(name = "is_active", nullable = false)
-    private boolean isActive = false;
-
-    @Column(name = "is_pending", nullable = false)
-    private boolean isPending = true;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 100)
+    private CollectionPointStatus status =  CollectionPointStatus.PENDING;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

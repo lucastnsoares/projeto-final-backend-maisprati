@@ -25,7 +25,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.net.URI;
 
 @RestController
-@RequestMapping("/api/collection-points")
+@RequestMapping("/collection-points")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "bearerAuth")
 @Tag(name = "Pontos de Coleta", description = "Endpoints para gerenciamento de pontos de coleta")
