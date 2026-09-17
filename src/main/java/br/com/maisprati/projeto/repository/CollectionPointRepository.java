@@ -36,6 +36,11 @@ public interface CollectionPointRepository extends JpaRepository<CollectionPoint
                )) AS distanceKm
         FROM collection_points cp
         WHERE cp.status = 'ACTIVE'
+          AND (:clothTypeIds IS NULL OR cp.id IN (
+              SELECT cpc.collection_point_id 
+              FROM collection_point_cloth_types cpc 
+              WHERE cpc.cloth_type_id IN (:clothTypeIds)
+          ))
           AND (6371 * acos(
                    LEAST(1.0, GREATEST(-1.0,
                        cos(radians(:userLat)) * cos(radians(cp.latitude::float8)) *
@@ -49,6 +54,11 @@ public interface CollectionPointRepository extends JpaRepository<CollectionPoint
         SELECT count(*)
         FROM collection_points cp
         WHERE cp.status = 'ACTIVE'
+          AND (:clothTypeIds IS NULL OR cp.id IN (
+              SELECT cpc.collection_point_id 
+              FROM collection_point_cloth_types cpc 
+              WHERE cpc.cloth_type_id IN (:clothTypeIds)
+          ))
           AND (6371 * acos(
                    LEAST(1.0, GREATEST(-1.0,
                        cos(radians(:userLat)) * cos(radians(cp.latitude::float8)) *
@@ -62,6 +72,7 @@ public interface CollectionPointRepository extends JpaRepository<CollectionPoint
             @Param("userLat") BigDecimal userLat,
             @Param("userLng") BigDecimal userLng,
             @Param("radiusKm") BigDecimal radiusKm,
+            @Param ("clothTypeIds") List<Long> clothTypeIds,
             Pageable pageable
     );
 }

@@ -1,14 +1,22 @@
 package br.com.maisprati.projeto.service;
 
 import br.com.maisprati.projeto.dto.request.CollectionPointCreateRequestDTO;
+import br.com.maisprati.projeto.dto.request.CollectionPointUpdateDTO;
+import br.com.maisprati.projeto.dto.request.OperatorCreateRequestDTO;
 import br.com.maisprati.projeto.dto.response.CollectionPointDistanceResponseDTO;
 import br.com.maisprati.projeto.dto.response.CollectionPointResponseDTO;
+import br.com.maisprati.projeto.dto.response.CollectionPointSummaryResponseDTO;
+import br.com.maisprati.projeto.dto.response.CollectionPointUsersResponseDTO;
+import br.com.maisprati.projeto.dto.response.UserResponseDTO;
+import br.com.maisprati.projeto.dto.response.UserSummaryResponseDTO;
+import br.com.maisprati.projeto.mapper.CollectionPointMapper;
 import br.com.maisprati.projeto.model.entity.Address;
 import br.com.maisprati.projeto.model.entity.ClothType;
 import br.com.maisprati.projeto.model.entity.CollectionPoint;
 import br.com.maisprati.projeto.model.entity.OperatingHour;
 import br.com.maisprati.projeto.model.entity.User;
 import br.com.maisprati.projeto.model.enums.CollectionPointStatus;
+import br.com.maisprati.projeto.model.enums.Role;
 import br.com.maisprati.projeto.model.enums.State;
 import br.com.maisprati.projeto.repository.ClothTypeRepository;
 import br.com.maisprati.projeto.repository.CollectionPointRepository;
@@ -18,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +34,7 @@ import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,6 +49,10 @@ public class CollectionPointService {
         private final CollectionPointRepository collectionPointRepository;
         private final ClothTypeRepository clothTypeRepository;
         private final UserRepository userRepository;
+        private final RegisterUserService registerUserService;
+        private final UserValidationService userValidationService;
+
+        private final CollectionPointMapper collectionPointMapper;
 
         @Transactional
         public CollectionPointResponseDTO createCollectionPoint(CollectionPointCreateRequestDTO dto,
@@ -105,8 +119,21 @@ public class CollectionPointService {
         @Transactional(readOnly = true)
         public CollectionPointResponseDTO getCollectionPointById(Long id) {
                 CollectionPoint collectionPoint = collectionPointRepository.findById(id)
-                                .orElseThrow(() -> new EntityNotFoundException("Ponto de coleta não encontrado."));
+                                .orElseThrow(() -> new IllegalArgumentException("Ponto de coleta não encontrado."));
                 return mapToDTO(collectionPoint);
+        }
+
+        @Transactional(readOnly = true)
+        public CollectionPointResponseDTO getCollectionPointByIdAndStatusActive(Long id) {
+                CollectionPoint collectionPoint = collectionPointRepository.findById(id)
+                                .filter(point -> point.getStatus() == CollectionPointStatus.ACTIVE)
+                                .orElseThrow(() -> new IllegalArgumentException("Ponto de coleta não encontrado ou indisponível."));
+                return mapToDTO(collectionPoint);
+        }
+
+        public Page<CollectionPointSummaryResponseDTO> findAll(Pageable pageable) {
+                return collectionPointRepository.findAll(pageable)
+                                .map(CollectionPointSummaryResponseDTO::new);
         }
 
         @Transactional(readOnly = true)
@@ -114,6 +141,7 @@ public class CollectionPointService {
                         BigDecimal userLat,
                         BigDecimal userLng,
                         Double radiusKm,
+                        List<Long> clothTypeIds,
                         Pageable pageable) {
 
                 if (userLat.compareTo(MIN_LATITUDE) < 0 || userLat.compareTo(MAX_LATITUDE) > 0
@@ -124,8 +152,96 @@ public class CollectionPointService {
                 BigDecimal effectiveRadius = (radiusKm != null && radiusKm > 0.0) ? new BigDecimal(radiusKm)
                                 : new BigDecimal("15.0"); // Default 15km
 
-                return collectionPointRepository.findNearby(userLat, userLng, effectiveRadius, pageable)
+                List<Long> effectiveClothTypeIds = (clothTypeIds != null && !clothTypeIds.isEmpty()) 
+                        ? clothTypeIds 
+                        : null;
+
+                return collectionPointRepository.findNearby(userLat, userLng, effectiveRadius, effectiveClothTypeIds, pageable)
                                 .map(CollectionPointDistanceResponseDTO::new);
+        }
+
+        @Transactional
+        public CollectionPointResponseDTO updateCollectionPoint(Long id, CollectionPointUpdateDTO dto) {
+        CollectionPoint collectionPoint = collectionPointRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Ponto de coleta não encontrado."));
+
+        collectionPointMapper.updateEntityFromDto(dto, collectionPoint);
+
+         if (dto.address() != null && collectionPoint.getAddress() != null) {
+                collectionPointMapper.updateAddressFromDto(dto.address(), collectionPoint.getAddress());
+        }
+
+        if (dto.clothTypeIds() != null && !dto.clothTypeIds().isEmpty()) {
+                List<ClothType> clothTypes = clothTypeRepository.findAllById(dto.clothTypeIds());
+                if (clothTypes.size() != dto.clothTypeIds().size()) {
+                throw new IllegalArgumentException("Um ou mais tipos de tecidos informados não foram encontrados.");
+                }
+                collectionPoint.getClothTypes().clear();
+                collectionPoint.getClothTypes().addAll(clothTypes);
+        }
+
+        if (dto.operatingHour() != null && !dto.operatingHour().isEmpty()) {
+                collectionPoint.getOperatingHours().clear();
+                dto.operatingHour().stream()
+                        .map(collectionPointMapper::toOperatingHourEntity)
+                        .forEach(collectionPoint.getOperatingHours()::add);
+        }
+
+        CollectionPoint saved = collectionPointRepository.save(collectionPoint);
+        return mapToDTO(saved);
+        }
+
+
+        @Transactional
+        public CollectionPointUsersResponseDTO addOperatorToCollectionPoint(Long id, OperatorCreateRequestDTO operator, String managerEmail) {
+                CollectionPoint collectionPoint = collectionPointRepository.findById(id)
+                                .orElseThrow(() -> new IllegalArgumentException("Ponto de coleta não encontrado."));
+
+                User manager = userRepository.findByEmail(managerEmail)
+                                .orElseThrow(() -> new IllegalArgumentException("Gerente não encontrado."));
+
+                if (!collectionPoint.getManagers().contains(manager)) {
+                        throw new BadCredentialsException("Você não possui permissão para adicionar operadores a este ponto de coleta.");
+                }
+
+                User user = userRepository.findByEmail(operator.email())
+                                .orElseThrow(() -> new IllegalArgumentException("Operador não encontrado."));
+
+                if(user.getRole().stream().noneMatch(role -> role.equals("ROLE_PONTO_COLETA_OPERADOR"))) {
+                        user.getRole().add(Role.PONTO_COLETA_OPERADOR);
+                }
+
+                collectionPoint.getOperators().add(user);
+                CollectionPoint saved = collectionPointRepository.save(collectionPoint);
+                return new CollectionPointUsersResponseDTO(
+                                new CollectionPointSummaryResponseDTO(saved),
+                                saved.getManagers().stream().map(UserSummaryResponseDTO::new).collect(Collectors.toSet()),
+                                saved.getOperators().stream().map(UserSummaryResponseDTO::new).collect(Collectors.toSet())
+                );
+        }
+
+        public CollectionPointUsersResponseDTO getOperatorsByCollectionPointId(Long id, String managerEmail) {
+                CollectionPoint collectionPoint = collectionPointRepository.findById(id)
+                                .orElseThrow(() -> new IllegalArgumentException("Ponto de coleta não encontrado."));
+
+                collectionPoint.getManagers().stream()
+                                .filter(manager -> manager.getEmail().equals(managerEmail))
+                                .findFirst()
+                                .orElseThrow(() -> new BadCredentialsException("Você não possui permissão para visualizar os operadores deste ponto de coleta."));                
+
+
+                Set<UserSummaryResponseDTO> managers = collectionPoint.getManagers().stream()
+                                .map(UserSummaryResponseDTO::new)
+                                .collect(Collectors.toSet());
+
+                Set<UserSummaryResponseDTO> operators = collectionPoint.getOperators().stream()
+                                .map(UserSummaryResponseDTO::new)
+                                .collect(Collectors.toSet());
+
+                CollectionPointSummaryResponseDTO collectionPointSummary = new CollectionPointSummaryResponseDTO(collectionPoint);
+
+                
+                return new CollectionPointUsersResponseDTO(collectionPointSummary, managers, operators);
         }
 
         private CollectionPointResponseDTO mapToDTO(CollectionPoint entity) {
