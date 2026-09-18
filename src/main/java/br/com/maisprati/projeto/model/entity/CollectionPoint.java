@@ -51,6 +51,7 @@ public class CollectionPoint {
             name = "collection_point_operating_hours",
             joinColumns = @JoinColumn(name = "collection_point_id", nullable = false)
     )
+    @Builder.Default
     private Set<OperatingHour> operatingHours = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.LAZY)
@@ -59,6 +60,7 @@ public class CollectionPoint {
             joinColumns = @JoinColumn(name = "collection_point_id", nullable = false),
             inverseJoinColumns = @JoinColumn(name = "cloth_type_id", nullable = false)
     )
+    @Builder.Default
     private Set<ClothType> clothTypes = new HashSet<>();
 
     @Column(name = "point_picture_url", length = 2048)
@@ -66,6 +68,7 @@ public class CollectionPoint {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 100)
+    @Builder.Default
     private CollectionPointStatus status =  CollectionPointStatus.PENDING;
 
     @CreationTimestamp

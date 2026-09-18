@@ -18,7 +18,7 @@ import br.com.maisprati.projeto.model.enums.CollectionPointStatus;
 public interface CollectionPointRepository extends JpaRepository<CollectionPoint, Long> {
 
     // Busca pontos de coleta baseados no status
-    List<CollectionPoint> findByStatus(CollectionPointStatus status);
+    Page<CollectionPoint> findByStatus(CollectionPointStatus status, Pageable pageable);
 
     // Busca pontos de coleta ativos próximos a uma localização específica dentro de um raio definido (Fórmula de Haversine)
     @Query(value = """
