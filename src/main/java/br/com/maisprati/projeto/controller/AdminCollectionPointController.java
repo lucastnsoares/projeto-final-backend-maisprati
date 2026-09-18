@@ -1,9 +1,14 @@
 package br.com.maisprati.projeto.controller;
 
+import br.com.maisprati.projeto.dto.request.CollectionPointCreateRequestDTO;
+import br.com.maisprati.projeto.dto.response.ValidationErrorResponseDTO;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +28,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.net.URI;
 
 @RestController
 @RequestMapping("/admin/collection-points")
@@ -33,6 +41,31 @@ import org.springframework.web.bind.annotation.*;
 public class AdminCollectionPointController {
 
     private final CollectionPointService collectionPointService;
+
+    @Operation(summary = "Cadastrar Ponto de Coleta", description = "Permite que apenas administradores cadastrem novos pontos de coleta.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Ponto de coleta cadastrado com sucesso e aguardando aprovação.", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = CollectionPointResponseDTO.class))),
+
+            @ApiResponse(responseCode = "400", description = "Erro de validação nos campos informados", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ValidationErrorResponseDTO.class))),
+
+            @ApiResponse(responseCode = "401", description = "Token de autenticação ausente ou inválido", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+
+            @ApiResponse(responseCode = "403", description = "Acesso negado para o perfil atual", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+    })
+    @PostMapping
+    public ResponseEntity<CollectionPointResponseDTO> createCollectionPoint(
+            @Valid @RequestBody CollectionPointCreateRequestDTO requestDTO,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        CollectionPointResponseDTO response = collectionPointService.createCollectionPoint(requestDTO, userDetails.getUsername());
+
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(response.getId())
+                .toUri();
+
+        return ResponseEntity.created(uri).body(response);
+    }
 
     @GetMapping
     public ResponseEntity<Page<CollectionPointSummaryResponseDTO>> findAll(
