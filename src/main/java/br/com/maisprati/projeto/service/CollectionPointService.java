@@ -116,6 +116,45 @@ public class CollectionPointService {
                 return mapToDTO(saved);
         }
 
+        // Status do ponto de coleta
+        @Transactional(readOnly = true)
+        public Page<CollectionPointResponseDTO> findPendingCollectionPoints(Pageable pageable) {
+                return collectionPointRepository.findByStatus(CollectionPointStatus.PENDING, pageable)
+                        .map(this::mapToDTO);
+        }
+
+        @Transactional
+        public CollectionPointResponseDTO approveCollectionPoint(Long id) {
+                CollectionPoint point = collectionPointRepository.findById(id)
+                        .orElseThrow(() -> new EntityNotFoundException("Ponto de coleta não encontrado com o ID: " + id));
+
+                // Transição de Estado: PENDING -> ACTIVE
+                point.setStatus(CollectionPointStatus.ACTIVE);
+
+                CollectionPoint updatedPoint = collectionPointRepository.save(point);
+                return mapToDTO(updatedPoint);
+        }
+
+        // Rejeição / Suspensão do ponto pelo Administrador
+        @Transactional
+        public CollectionPointResponseDTO rejectCollectionPoint(Long id) {
+                CollectionPoint point = collectionPointRepository.findById(id)
+                        .orElseThrow(() -> new EntityNotFoundException("Ponto de coleta não encontrado com o ID: " + id));
+
+                // Transição de Estado: PENDING -> SUSPENDED
+                point.setStatus(CollectionPointStatus.SUSPENDED);
+
+                CollectionPoint updatedPoint = collectionPointRepository.save(point);
+                return mapToDTO(updatedPoint);
+        }
+
+        // Consulta pública para o mapa - Retorna apenas pontos com status ACTIVE
+        @Transactional(readOnly = true)
+        public Page<CollectionPointResponseDTO> findPublicApprovedPoints(Pageable pageable) {
+                return collectionPointRepository.findByStatus(CollectionPointStatus.ACTIVE, pageable)
+                        .map(this::mapToDTO);
+        }
+
         @Transactional(readOnly = true)
         public CollectionPointResponseDTO getCollectionPointById(Long id) {
                 CollectionPoint collectionPoint = collectionPointRepository.findById(id)
