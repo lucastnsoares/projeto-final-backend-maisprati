@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.text.Normalizer;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -80,23 +81,27 @@ public class PostService {
         return new PostResponseDTO(post);
     }
 
-    //Apenas admin
+    // Apenas ADMIN
     @Transactional(readOnly = true)
     public Page<PostSummaryResponseDTO> findAllPosts(Long categoryId, Pageable pageable) {
         return postRepository.findAllWithCategoryFilter(categoryId, pageable)
                 .map(PostSummaryResponseDTO::new);
     }
 
-    //Apenas admin
+    // Apenas ADMIN
     @Transactional
     public PostResponseDTO updatePost(Long id, PostEditRequestDTO dto) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Post inexistente."));
 
+        if (post.getDeletedAt() != null) {
+            throw new IllegalArgumentException("Não é possível atualizar um post que foi excluído.");
+        }
+
         String targetImageUrl = dto.coverImageUrl() != null ? dto.coverImageUrl().trim() : post.getCoverImageUrl();
         String targetImageAlt = dto.coverImageAlt() != null ? dto.coverImageAlt().trim() : post.getCoverImageAlt();
         validateAccessibilityAndCoverImage(targetImageUrl, targetImageAlt);
-        
+
         if (dto.title() != null && !dto.title().isBlank()) {
             post.setTitle(dto.title().trim());
             String newSlug = generateUniqueSlug(dto.title());
@@ -134,24 +139,39 @@ public class PostService {
         return new PostResponseDTO(updatedPost);
     }
 
-    //apenas ADMIN
+    // apenas ADMIN
     @Transactional(readOnly = true)
     public PostResponseDTO findPostById(Long id) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Post inexistente ou não disponível."));
+        if (post.getDeletedAt() != null) {
+            throw new IllegalArgumentException("Post deletado.");
+        }
         return new PostResponseDTO(post);
     }
 
+    // apenas ADMIN
+    @Transactional
+    public void deletePost(Long id) {
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Post inexistente."));
+
+        post.setDeletedAt(Instant.now());
+        post.setPublished(false);
+        postRepository.save(post);
+    }
 
     private void validateAccessibilityAndCoverImage(String coverImageUrl, String coverImageAlt) {
         boolean hasImageUrl = coverImageUrl != null && !coverImageUrl.isBlank();
         boolean hasImageAlt = coverImageAlt != null && !coverImageAlt.isBlank();
 
         if (hasImageUrl && !hasImageAlt) {
-            throw new IllegalArgumentException("O texto alternativo (coverImageAlt) é obrigatório quando uma imagem de capa é fornecida.");
+            throw new IllegalArgumentException(
+                    "O texto alternativo (coverImageAlt) é obrigatório quando uma imagem de capa é fornecida.");
         }
     }
 
+    @Transactional(readOnly = true)
     private Set<ClothType> resolveClothTypes(Set<Long> clothTypeIds) {
         if (clothTypeIds == null || clothTypeIds.isEmpty()) {
             return new HashSet<>();
@@ -167,7 +187,8 @@ public class PostService {
                     .filter(id -> !foundIds.contains(id))
                     .collect(Collectors.toSet());
 
-            throw new IllegalArgumentException("Os seguintes IDs de tipos de tecido não foram encontrados: " + missingIds);
+            throw new IllegalArgumentException(
+                    "Os seguintes IDs de tipos de tecido não foram encontrados: " + missingIds);
         }
 
         return new HashSet<>(foundTypes);

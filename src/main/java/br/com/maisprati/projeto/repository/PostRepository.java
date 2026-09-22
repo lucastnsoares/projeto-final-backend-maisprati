@@ -20,6 +20,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("""
         SELECT p FROM Post p
         WHERE p.isPublished = true
+        AND p.deletedAt IS NULL
           AND (:categoryId IS NULL OR p.category.id = :categoryId)
     """)
     Page<Post> findAllPublishedWithCategoryFilter(
@@ -29,7 +30,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     @Query("""
         SELECT p FROM Post p
-        WHERE (:categoryId IS NULL OR p.category.id = :categoryId)
+        WHERE p.deletedAt IS NULL
+          AND (:categoryId IS NULL OR p.category.id = :categoryId)
     """)
     Page<Post> findAllWithCategoryFilter(
             @Param("categoryId") Long categoryId,

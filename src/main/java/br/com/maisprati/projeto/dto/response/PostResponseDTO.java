@@ -23,8 +23,8 @@ public record PostResponseDTO(
         @Schema(description = "Conteúdo completo do artigo (Markdown ou texto estruturado)", example = "## Materiais necessários\n- Retalhos de jeans\n- Linha e agulha...")
         String body,
 
-        @Schema(description = "Nome da categoria associada ao artigo", example = "Upcycling")
-        String categoryName,
+        @Schema(description = "Categoria associada ao artigo", example = "{\"id\":1,\"name\":\"Upcycling\"}")
+        CategoryResponseDTO category,
 
         @Schema(description = "URL da imagem de capa", example = "https://www.projeto.com.br/posts/jeans-upcycling.jpg")
         String coverImageUrl,
@@ -57,7 +57,7 @@ public record PostResponseDTO(
                 post.getTitle(),
                 post.getSummary(),
                 post.getBody(),
-                post.getCategory() != null ? post.getCategory().getName() : null,
+                post.getCategory() != null ? new CategoryResponseDTO(post.getCategory()) : null,
                 post.getCoverImageUrl(),
                 post.getCoverImageAlt(),
                 post.getTags(),

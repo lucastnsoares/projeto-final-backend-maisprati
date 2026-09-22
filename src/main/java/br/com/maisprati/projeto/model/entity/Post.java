@@ -77,4 +77,7 @@ public class Post {
     @JoinColumn(name = "created_by_id", nullable = false)
     private User createdBy;
 
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
 }
