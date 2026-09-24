@@ -1,7 +1,10 @@
 package br.com.maisprati.projeto.service;
 
 import br.com.maisprati.projeto.dto.request.PostCreateRequestDTO;
+import br.com.maisprati.projeto.dto.request.PostDeleteRequestDTO;
 import br.com.maisprati.projeto.dto.request.PostEditRequestDTO;
+import br.com.maisprati.projeto.dto.response.AdminPostResponseDTO;
+import br.com.maisprati.projeto.dto.response.AdminPostSummaryResponseDTO;
 import br.com.maisprati.projeto.dto.response.PostResponseDTO;
 import br.com.maisprati.projeto.dto.response.PostSummaryResponseDTO;
 import br.com.maisprati.projeto.model.entity.Category;
@@ -20,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.text.Normalizer;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -69,8 +73,15 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public Page<PostSummaryResponseDTO> findAllByPublishedTrue(Long categoryId, Pageable pageable) {
-        return postRepository.findAllPublishedWithCategoryFilter(categoryId, pageable)
+    public Page<PostSummaryResponseDTO> findAllByPublishedTrue(Long categoryId, String searchTerm, Set<String> tags, Pageable pageable) {
+        String termPattern = (searchTerm != null && !searchTerm.isBlank()) 
+            ? "%" + searchTerm.toLowerCase() + "%" 
+            : null;
+
+        boolean hasTags = (tags != null && !tags.isEmpty());
+
+        Set<String> tagsParam = hasTags ? tags : Collections.emptySet();
+        return postRepository.findAllPublishedWithFilters(categoryId, termPattern, hasTags, tagsParam, pageable)
                 .map(PostSummaryResponseDTO::new);
     }
 
@@ -83,9 +94,16 @@ public class PostService {
 
     // Apenas ADMIN
     @Transactional(readOnly = true)
-    public Page<PostSummaryResponseDTO> findAllPosts(Long categoryId, Pageable pageable) {
-        return postRepository.findAllWithCategoryFilter(categoryId, pageable)
-                .map(PostSummaryResponseDTO::new);
+    public Page<AdminPostSummaryResponseDTO> findAllPosts(Long categoryId, String searchTerm, Set<String> tags, Pageable pageable) {
+        String termPattern = (searchTerm != null && !searchTerm.isBlank()) 
+            ? "%" + searchTerm.toLowerCase() + "%" 
+            : null;
+
+        boolean hasTags = (tags != null && !tags.isEmpty());
+
+        Set<String> tagsParam = hasTags ? tags : Collections.emptySet();
+        return postRepository.findAllWithCategoryFilter(categoryId, termPattern, hasTags, tagsParam, pageable)
+                .map(AdminPostSummaryResponseDTO::new);
     }
 
     // Apenas ADMIN
@@ -141,21 +159,26 @@ public class PostService {
 
     // apenas ADMIN
     @Transactional(readOnly = true)
-    public PostResponseDTO findPostById(Long id) {
+    public AdminPostResponseDTO findPostById(Long id) {
         Post post = postRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Post inexistente ou não disponível."));
-        if (post.getDeletedAt() != null) {
-            throw new IllegalArgumentException("Post deletado.");
-        }
-        return new PostResponseDTO(post);
+                .orElseThrow(() -> new IllegalArgumentException("Post inexistente ou não disponível"));
+        return new AdminPostResponseDTO(post);
     }
 
     // apenas ADMIN
     @Transactional
-    public void deletePost(Long id) {
+    public void deletePost(Long id, PostDeleteRequestDTO dto, User loggedInUser) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Post inexistente."));
-
+        if (post.getDeletedAt() != null) {
+            throw new IllegalArgumentException("Post já deletado anteriormente");
+        }
+        if (dto.justification() != null && !dto.justification().isBlank()) {
+            post.setDeletionJustification(dto.justification().trim());
+        } else {
+            throw new IllegalArgumentException("A justificativa é obrigatória para a exclusão do post.");
+        }
+        post.setDeletedBy(loggedInUser);
         post.setDeletedAt(Instant.now());
         post.setPublished(false);
         postRepository.save(post);

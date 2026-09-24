@@ -80,4 +80,11 @@ public class Post {
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "deleted_by_user_id")
+    private User deletedBy;
+
+    @Column(name = "deletion_justification", length = 255)
+    private String deletionJustification;
+
 }

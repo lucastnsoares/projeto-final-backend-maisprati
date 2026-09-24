@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 
@@ -17,24 +18,55 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     Page<Post> findAllByPublishedTrue(Pageable pageable);
 	Optional<Post> findByIdAndIsPublishedTrue(Long id);
 
-    @Query("""
-        SELECT p FROM Post p
-        WHERE p.isPublished = true
-        AND p.deletedAt IS NULL
-          AND (:categoryId IS NULL OR p.category.id = :categoryId)
-    """)
-    Page<Post> findAllPublishedWithCategoryFilter(
+    @Query(
+        value = """
+            SELECT DISTINCT p FROM Post p 
+            LEFT JOIN p.tags t 
+            WHERE p.isPublished = true 
+              AND p.deletedAt IS NULL 
+              AND (:categoryId IS NULL OR p.category.id = :categoryId) 
+              AND (:searchTerm IS NULL OR lower(p.title) LIKE :searchTerm OR lower(p.summary) LIKE :searchTerm) 
+              AND (:hasTags = false OR t IN :tags)
+        """,
+        countQuery = """
+            SELECT COUNT(DISTINCT p) FROM Post p 
+            LEFT JOIN p.tags t 
+            WHERE p.isPublished = true 
+              AND p.deletedAt IS NULL 
+              AND (:categoryId IS NULL OR p.category.id = :categoryId) 
+              AND (:searchTerm IS NULL OR lower(p.title) LIKE :searchTerm OR lower(p.summary) LIKE :searchTerm) 
+              AND (:hasTags = false OR t IN :tags)
+        """
+    )
+    Page<Post> findAllPublishedWithFilters(
             @Param("categoryId") Long categoryId,
+            @Param("searchTerm") String searchTerm,
+            @Param("hasTags") boolean hasTags,
+            @Param("tags") Set<String> tags,
             Pageable pageable
     );
 
-    @Query("""
-        SELECT p FROM Post p
-        WHERE p.deletedAt IS NULL
-          AND (:categoryId IS NULL OR p.category.id = :categoryId)
-    """)
+    @Query(
+        value = """
+            SELECT DISTINCT p FROM Post p 
+            LEFT JOIN p.tags t 
+            WHERE (:categoryId IS NULL OR p.category.id = :categoryId) 
+              AND (:searchTerm IS NULL OR lower(p.title) LIKE :searchTerm OR lower(p.summary) LIKE :searchTerm) 
+              AND (:hasTags = false OR t IN :tags)
+        """,
+        countQuery = """
+            SELECT COUNT(DISTINCT p) FROM Post p 
+            LEFT JOIN p.tags t 
+            WHERE (:categoryId IS NULL OR p.category.id = :categoryId) 
+              AND (:searchTerm IS NULL OR lower(p.title) LIKE :searchTerm OR lower(p.summary) LIKE :searchTerm) 
+              AND (:hasTags = false OR t IN :tags)
+        """
+    )
     Page<Post> findAllWithCategoryFilter(
             @Param("categoryId") Long categoryId,
+            @Param("searchTerm") String searchTerm,
+            @Param("hasTags") boolean hasTags,
+            @Param("tags") Set<String> tags,
             Pageable pageable
     );
 }

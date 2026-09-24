@@ -1,9 +1,12 @@
 package br.com.maisprati.projeto.controller;
 
 import br.com.maisprati.projeto.dto.request.PostCreateRequestDTO;
+import br.com.maisprati.projeto.dto.request.PostDeleteRequestDTO;
 import br.com.maisprati.projeto.dto.request.PostEditRequestDTO;
 import br.com.maisprati.projeto.dto.response.PostResponseDTO;
 import br.com.maisprati.projeto.dto.response.PostSummaryResponseDTO;
+import br.com.maisprati.projeto.dto.response.AdminPostResponseDTO;
+import br.com.maisprati.projeto.dto.response.AdminPostSummaryResponseDTO;
 import br.com.maisprati.projeto.dto.response.ErrorResponseDTO;
 import br.com.maisprati.projeto.dto.response.ValidationErrorResponseDTO;
 import br.com.maisprati.projeto.model.entity.User;
@@ -21,6 +24,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import java.net.URI;
+import java.util.Set;
 
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
@@ -57,18 +61,28 @@ public class AdminPostController {
                 content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class),
                     examples = @ExampleObject(value = "{\"timestamp\": \"2026-08-27T00:00:00Z\", \"status\": 403, \"error\": \"Forbidden\", \"message\": \"Você não possui autorização para acessar este recurso.\", \"path\": \"/admin/posts\"}")))
         })
-    public ResponseEntity<Page<PostSummaryResponseDTO>> findAllPosts(
-            @Parameter(description = "ID da categoria para filtrar os posts. Se não informado, retorna posts de todas as categorias.") @RequestParam(required = false) Long categoryId,
+    public ResponseEntity<Page<AdminPostSummaryResponseDTO>> findAllPosts(
+            @Parameter(description = "ID da categoria para filtrar os posts. Se não informado, retorna posts de todas as categorias.") 
+            @RequestParam(required = false) 
+            Long categoryId,
+
+            @Parameter(description = "Termo de busca para filtrar os posts.")
+            @RequestParam(required = false)
+            String searchTerm,
+
+            @Parameter(description = "Tags para filtrar os posts.")
+            @RequestParam(required = false)
+            Set<String> tags,
 
             @ParameterObject @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.ASC) Pageable pageable) {
-        return ResponseEntity.ok(postService.findAllPosts(categoryId, pageable));
+        return ResponseEntity.ok(postService.findAllPosts(categoryId, searchTerm, tags, pageable));
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Buscar um post específico por ID", description = "Retorna um post específico com base no ID fornecido, independente se publicado ou não. Apenas usuários com role ADMIN podem acessar este endpoint.")
         @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Post localizado",
-                content = @Content(schema = @Schema(implementation = PostResponseDTO.class))),
+                content = @Content(schema = @Schema(implementation = AdminPostResponseDTO.class))),
             @ApiResponse(responseCode = "400", description = "Post não encontrado ou já excluído",
                 content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class),
                     examples = @ExampleObject(value = "{\"timestamp\": \"2026-08-27T00:00:00Z\", \"status\": 400, \"error\": \"Bad Request\", \"message\": \"Post inexistente ou não disponível.\", \"path\": \"/admin/posts/99\"}"))),
@@ -79,7 +93,7 @@ public class AdminPostController {
                 content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class),
                     examples = @ExampleObject(value = "{\"timestamp\": \"2026-08-27T00:00:00Z\", \"status\": 403, \"error\": \"Forbidden\", \"message\": \"Você não possui autorização para acessar este recurso.\", \"path\": \"/admin/posts/1\"}")))
         })
-        public ResponseEntity<PostResponseDTO> findPostById(
+        public ResponseEntity<AdminPostResponseDTO> findPostById(
             @Parameter(description = "ID do post", example = "1") @PathVariable Long id) {
         return ResponseEntity.ok(postService.findPostById(id));
     }
@@ -154,8 +168,13 @@ public class AdminPostController {
                     examples = @ExampleObject(value = "{\"timestamp\": \"2026-08-27T00:00:00Z\", \"status\": 403, \"error\": \"Forbidden\", \"message\": \"Você não possui autorização para acessar este recurso.\", \"path\": \"/admin/posts/1\"}")))
         })
         public ResponseEntity<Void> deletePost(
-            @Parameter(description = "ID do post", example = "1") @PathVariable Long id) {
-        postService.deletePost(id);
+            @Parameter(description = "ID do post", example = "1")
+            @PathVariable Long id,
+        
+            @Valid @RequestBody PostDeleteRequestDTO dto,
+        
+            @AuthenticationPrincipal User loggedInUser) {
+        postService.deletePost(id, dto, loggedInUser);
         return ResponseEntity.noContent().build();
     }
 }

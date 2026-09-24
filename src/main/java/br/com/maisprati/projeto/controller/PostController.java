@@ -10,6 +10,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+
+import java.util.Set;
+
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -44,12 +47,21 @@ public class PostController {
     @GetMapping
     public ResponseEntity<Page<PostSummaryResponseDTO>> findAllByPublishedTrue(
         @Parameter(description = "ID da categoria para filtrar os posts. Se não informado, retorna posts de todas as categorias.")
-        @RequestParam(required = false) Long categoryId,
+        @RequestParam(required = false) 
+        Long categoryId,
+
+        @Parameter(description = "Termo de busca para filtrar os posts.")
+        @RequestParam(required = false)
+        String searchTerm,
+
+        @Parameter(description = "Lista de tags para filtrar os posts. Se não informado, retorna posts de todas as tags.")
+        @RequestParam(required = false)
+        Set<String> tags,
 
         @ParameterObject
         @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.ASC)
         Pageable pageable) {
-        return ResponseEntity.ok(postService.findAllByPublishedTrue(categoryId,pageable));
+        return ResponseEntity.ok(postService.findAllByPublishedTrue(categoryId, searchTerm, tags, pageable));
     }
 
     @GetMapping("/{id}")
