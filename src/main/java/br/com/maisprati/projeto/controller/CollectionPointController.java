@@ -1,8 +1,6 @@
 package br.com.maisprati.projeto.controller;
 
-import br.com.maisprati.projeto.dto.request.OperatorCreateRequestDTO;
 import br.com.maisprati.projeto.dto.response.CollectionPointResponseDTO;
-import br.com.maisprati.projeto.dto.response.CollectionPointUsersResponseDTO;
 import br.com.maisprati.projeto.dto.response.CollectionPointDistanceResponseDTO;
 import br.com.maisprati.projeto.service.CollectionPointService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,8 +15,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -62,24 +58,4 @@ public class CollectionPointController {
                 return ResponseEntity.ok(collectionPointService.findNearby(lat, lng, radiusKm, clothTypeIds, pageable));
         }
 
-
-        
-        @GetMapping("/{id}/users")
-        @PreAuthorize("hasAnyRole('PONTO_COLETA_GERENTE', 'ADMIN')")
-        @Operation(summary = "Listar operadores e gerentes de um ponto de coleta", description = "Permite listar todos os operadores e gerentes associados a um ponto de coleta específico, desde que o usuário autenticado seja um gerente do ponto ou um administrador.")
-        public ResponseEntity<CollectionPointUsersResponseDTO> getOperatorsByCollectionPointId(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
-                return ResponseEntity.ok(collectionPointService.getOperatorsByCollectionPointId(id, userDetails.getUsername()));
-        }
-        
-
-        @PatchMapping ("/{id}/users/operators")
-        @PreAuthorize("hasAnyRole('PONTO_COLETA_GERENTE', 'ADMIN')")
-        @Operation(summary = "Adicionar operador a um ponto de coleta", description = "Permite adicionar um operador a um ponto de coleta específico.")
-        public ResponseEntity<CollectionPointUsersResponseDTO> addOperatorToCollectionPoint(
-                        @PathVariable Long id,
-                        @RequestBody OperatorCreateRequestDTO operator,
-                        @AuthenticationPrincipal UserDetails userDetails) {
-                CollectionPointUsersResponseDTO response = collectionPointService.addOperatorToCollectionPoint(id, operator, userDetails.getUsername());
-                return ResponseEntity.ok(response);  
-        }
 }
