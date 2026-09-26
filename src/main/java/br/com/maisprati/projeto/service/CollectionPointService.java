@@ -243,8 +243,10 @@ public class CollectionPointService {
                         throw new BadCredentialsException("Você não possui permissão para adicionar operadores a este ponto de coleta.");
                 }
 
-                User user = userRepository.findByEmail(operator.email())
-                                .orElseThrow(() -> new IllegalArgumentException("Operador não encontrado."));
+                String cleanDocument = operator.document().replaceAll("\\D", "");
+
+                User user = userRepository.findByDocument(cleanDocument)
+                                .orElseThrow(() -> new EntityNotFoundException("Operador não encontrado."));
 
                 if(user.getRole().stream().noneMatch(role -> role.equals("ROLE_PONTO_COLETA_OPERADOR"))) {
                         user.getRole().add(Role.PONTO_COLETA_OPERADOR);
