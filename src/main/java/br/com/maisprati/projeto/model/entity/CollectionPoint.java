@@ -1,5 +1,6 @@
 package br.com.maisprati.projeto.model.entity;
 
+import br.com.maisprati.projeto.model.enums.CollectionPointStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -50,6 +51,7 @@ public class CollectionPoint {
             name = "collection_point_operating_hours",
             joinColumns = @JoinColumn(name = "collection_point_id", nullable = false)
     )
+    @Builder.Default
     private Set<OperatingHour> operatingHours = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.LAZY)
@@ -58,16 +60,16 @@ public class CollectionPoint {
             joinColumns = @JoinColumn(name = "collection_point_id", nullable = false),
             inverseJoinColumns = @JoinColumn(name = "cloth_type_id", nullable = false)
     )
+    @Builder.Default
     private Set<ClothType> clothTypes = new HashSet<>();
 
     @Column(name = "point_picture_url", length = 2048)
     private String pointPictureUrl;
 
-    @Column(name = "is_active", nullable = false)
-    private boolean isActive = false;
-
-    @Column(name = "is_pending", nullable = false)
-    private boolean isPending = true;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 100)
+    @Builder.Default
+    private CollectionPointStatus status =  CollectionPointStatus.PENDING;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

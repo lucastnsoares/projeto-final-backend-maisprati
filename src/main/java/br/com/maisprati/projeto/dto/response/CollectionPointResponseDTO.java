@@ -1,5 +1,6 @@
 package br.com.maisprati.projeto.dto.response;
 
+import br.com.maisprati.projeto.model.enums.CollectionPointStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
@@ -7,8 +8,20 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
 @Data
 @Builder
+@JsonPropertyOrder({
+    "id",
+    "name",
+    "status",
+    "isPending",
+    "pointPictureUrl",
+    "address",
+    "acceptedClothTypes",
+    "operatingHours"
+})
 @Schema(description = "Dados do ponto de coleta cadastrado")
 public class CollectionPointResponseDTO {
 
@@ -18,11 +31,8 @@ public class CollectionPointResponseDTO {
     @Schema(description = "Nome do ponto de coleta", example = "EcoPonto Central - Tecidos")
     private String name;
 
-    @Schema(description = "Status de pendência de aprovação", example = "true")
-    private boolean isPending;
-
-    @Schema(description = "Status de ativação no sistema", example = "false")
-    private boolean isActive;
+    @Schema(description = "Status do ponto de coleta no sistema", example = "ACTIVE")
+    private CollectionPointStatus status;
 
     private AddressResponseDTO address;
 
@@ -37,6 +47,18 @@ public class CollectionPointResponseDTO {
 
     @Data
     @Builder
+    @JsonPropertyOrder({
+        "street",
+        "number",
+        "complement",
+        "neighborhood",
+        "city",
+        "state",
+        "country",
+        "zipCode",
+        "latitude",
+        "longitude"
+    })
     public static class AddressResponseDTO {
         private String street;
         private String number;

@@ -18,9 +18,6 @@ public class CollectionPointCreateRequestDTO {
     @NotBlank(message = "O nome é obrigatório.")
     private String name;
 
-    @Schema(description = "Descrição sobre quais tipos de doações são aceitas", example = "Aceitamos retalhos de algodão, jeans e tecidos sintéticos para reciclagem.")
-    private String description;
-
     @NotNull(message = "Os dados de endereço são obrigatórios.")
     @Valid
     private AddressRequestDTO address;
