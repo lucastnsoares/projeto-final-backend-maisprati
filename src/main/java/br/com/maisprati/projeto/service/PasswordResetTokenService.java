@@ -51,10 +51,7 @@ public class PasswordResetTokenService {
             passwordResetToken.setExpirationDate(expirationDate);
 
             passwordResetTokenRepository.saveAndFlush(passwordResetToken);
-            String content = "Olá, " + user.getName() + "!\nSegue token de redefinição de senha: " + token;
-
-            emailService.sendSimpleEmail(user.getEmail(), "Solicitação de recuperação de senha", content);
-
+            emailService.sendPasswordResetEmailHtml(user.getEmail(), "Redefinição de Senha - Ecotecidos", user.getName(), token, "10");
         }
     }
 
