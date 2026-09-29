@@ -26,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -80,7 +81,7 @@ public class CollectionPointService {
                                 .neighborhood(dto.getAddress().getNeighborhood().trim().toUpperCase(Locale.ROOT))
                                 .city(dto.getAddress().getCity().trim().toUpperCase(Locale.ROOT))
                                 .state(State.valueOf(dto.getAddress().getState().trim().toUpperCase()))
-                                .country(dto.getAddress().getCountry().trim().toLowerCase(Locale.ROOT))
+                                .country(dto.getAddress().getCountry().trim().toUpperCase(Locale.ROOT))
                                 .zipCode(dto.getAddress().getZipCode().trim())
                                 .latitude(dto.getLatitude())
                                 .longitude(dto.getLongitude())
@@ -147,6 +148,34 @@ public class CollectionPointService {
                 CollectionPoint updatedPoint = collectionPointRepository.save(point);
                 return mapToDTO(updatedPoint);
         }
+
+        //Pausar
+        @Transactional
+        public CollectionPointResponseDTO pauseCollectionPoint(Long pointId, String username) {
+                CollectionPoint point = collectionPointRepository.findById(pointId)
+                        .orElseThrow(() -> new EntityNotFoundException("Ponto de coleta não encontrado com o ID: " + pointId));
+
+                User currentUser = userRepository.findByEmail(username)
+                        .orElseThrow(() -> new EntityNotFoundException("Usuário autenticado não encontrado."));
+
+                // Verifica user e admin
+                boolean isAdmin = currentUser.getRole().contains(Role.ADMIN);
+
+                // Verifica user e gerente
+                boolean isManager = point.getManagers().stream()
+                        .anyMatch(manager -> manager.getId().equals(currentUser.getId()));
+
+                // Se não for nem ADMIN ou Gerente do ponto, lanca 403
+                if (!isAdmin && !isManager) {
+                        throw new AccessDeniedException("Você não possui autorização para acessar este recurso.");
+                }
+
+                point.setStatus(CollectionPointStatus.PAUSED);
+                CollectionPoint updatedPoint = collectionPointRepository.save(point);
+
+                return mapToDTO(updatedPoint);
+        }
+
 
         // Consulta pública para o mapa - Retorna apenas pontos com status ACTIVE
         @Transactional(readOnly = true)

@@ -116,6 +116,15 @@ public class AdminCollectionPointController {
         return ResponseEntity.ok(response);
     }
 
+    @PatchMapping("/{id}/pause")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Pausar recebimento do ponto de coleta", description = "Permite que um gerente/proprietário do ponto altere o status para PAUSED.")
+    public ResponseEntity<CollectionPointResponseDTO> pauseCollectionPoint(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+
+        CollectionPointResponseDTO response = collectionPointService.pauseCollectionPoint(id, userDetails.getUsername());
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/{id}/users")
     @PreAuthorize("hasAnyRole('PONTO_COLETA_GERENTE', 'ADMIN')")
     @Operation(summary = "Listar operadores e gerentes de um ponto de coleta", description = "Permite listar todos os operadores e gerentes associados a um ponto de coleta específico, desde que o usuário autenticado seja um gerente do ponto ou um administrador.")
