@@ -90,7 +90,7 @@ public class CollectionPointService {
                 CollectionPoint collectionPoint = CollectionPoint.builder()
                                 .name(dto.getName().trim().toUpperCase(Locale.ROOT))
                                 .address(address)
-                                .pointPictureUrl(dto.getImageUrl().trim())
+                                .pointPictureUrl((dto.getImageUrl()) != null ? dto.getImageUrl().trim():null)
                                 .status(CollectionPointStatus.PENDING)
                                 .managers(new HashSet<>())
                                 .clothTypes(new HashSet<>())
