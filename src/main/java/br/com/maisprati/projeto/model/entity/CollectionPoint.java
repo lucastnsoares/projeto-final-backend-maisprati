@@ -71,6 +71,10 @@ public class CollectionPoint {
     @Builder.Default
     private CollectionPointStatus status =  CollectionPointStatus.PENDING;
 
+    @Column(name = "has_pending_update", nullable = false)
+    @Builder.Default
+    private boolean hasPendingUpdate = false;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;

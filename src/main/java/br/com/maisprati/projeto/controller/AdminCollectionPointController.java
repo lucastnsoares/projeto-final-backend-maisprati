@@ -76,10 +76,23 @@ public class AdminCollectionPointController {
         return ResponseEntity.ok().body(collectionPointService.getCollectionPointById(id));
     }
 
-    @PatchMapping("/{id}")
-    public ResponseEntity<CollectionPointResponseDTO> editCollectionPoint(@PathVariable Long id,
-            @RequestBody CollectionPointUpdateDTO dto) {
-        return ResponseEntity.ok().body(collectionPointService.updateCollectionPoint(id, dto));
+    @GetMapping("/pending-updates")
+    @Operation(summary = "Listar edições pendentes", description = "Retorna os pontos de coleta que aguardam aprovação de edição (hasPendingUpdate = true).")
+    public ResponseEntity<Page<PendingUpdateResponseDTO>> getPendingUpdates(@ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(collectionPointService.listPendingUpdates(pageable));
+    }
+
+    @PostMapping("/{id}/approve-update")
+    @Operation(summary = "Aprovar edição de um ponto", description = "Aplica as alterações propostas por um gerente ao ponto de coleta.")
+    public ResponseEntity<CollectionPointResponseDTO> approvePendingUpdate(@PathVariable Long id) {
+        return ResponseEntity.ok(collectionPointService.approvePendingUpdate(id));
+    }
+
+    @PostMapping("/{id}/reject-update")
+    @Operation(summary = "Rejeitar edição de um ponto", description = "Descarta as alterações propostas e remove o status pendente.")
+    public ResponseEntity<Void> rejectPendingUpdate(@PathVariable Long id) {
+        collectionPointService.rejectPendingUpdate(id);
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Listar pontos pendentes", description = "Retorna uma lista paginada de pontos com status PENDING.")

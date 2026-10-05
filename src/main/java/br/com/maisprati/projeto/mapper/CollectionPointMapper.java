@@ -18,6 +18,10 @@ public interface CollectionPointMapper {
     @Mapping(target = "pointPictureUrl", source = "imageUrl", qualifiedByName = "trimOnly")
     @Mapping(target = "clothTypes", ignore = true)     // Gerenciado manualmente no service via repositório
     @Mapping(target = "operatingHours", ignore = true) // Atualizado manualmente para evitar perda de vínculo JPA
+    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "hasPendingUpdate", ignore = true)
+    @Mapping(target = "managers", ignore = true)
+    @Mapping(target = "operators", ignore = true)
     void updateEntityFromDto(CollectionPointUpdateDTO dto, @MappingTarget CollectionPoint entity);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

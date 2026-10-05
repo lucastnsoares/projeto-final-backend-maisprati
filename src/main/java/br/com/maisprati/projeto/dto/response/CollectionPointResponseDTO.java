@@ -45,6 +45,9 @@ public class CollectionPointResponseDTO {
     @Schema(description = "Horários de funcionamento")
     private Set<OperatingHourResponseDTO> operatingHours;
 
+    @Schema(description = "Indica se há edições pendentes")
+    private boolean hasPendingUpdate;
+
     @Data
     @Builder
     @JsonPropertyOrder({

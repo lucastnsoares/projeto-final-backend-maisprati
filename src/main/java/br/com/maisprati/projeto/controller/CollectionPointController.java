@@ -1,5 +1,6 @@
 package br.com.maisprati.projeto.controller;
 
+import br.com.maisprati.projeto.dto.request.CollectionPointUpdateDTO;
 import br.com.maisprati.projeto.dto.response.CollectionPointResponseDTO;
 import br.com.maisprati.projeto.dto.response.CollectionPointDistanceResponseDTO;
 import br.com.maisprati.projeto.service.CollectionPointService;
@@ -7,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
@@ -15,6 +17,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -56,6 +60,18 @@ public class CollectionPointController {
                         @Parameter(description = "IDs dos tipos de tecidos a serem considerados na busca", example = "[1, 2, 3]") @RequestParam(required = false) List<Long> clothTypeIds,
                         @ParameterObject @PageableDefault(page = 0, size = 10) Pageable pageable) {
                 return ResponseEntity.ok(collectionPointService.findNearby(lat, lng, radiusKm, clothTypeIds, pageable));
+        }
+
+        @PutMapping("/{id}")
+        @PreAuthorize("isAuthenticated()")
+        @Operation(summary = "Atualizar Ponto de Coleta", description = "Se o usuário for gerente, cria uma solicitação pendente para aprovação. Se for Admin, aplica direto.")
+        public ResponseEntity<CollectionPointResponseDTO> updateCollectionPoint(
+                @PathVariable Long id,
+                @Valid @RequestBody CollectionPointUpdateDTO requestDTO,
+                @AuthenticationPrincipal UserDetails userDetails) {
+
+                CollectionPointResponseDTO response = collectionPointService.updateCollectionPoint(id, requestDTO, userDetails.getUsername());
+                return ResponseEntity.ok(response);
         }
 
 }
