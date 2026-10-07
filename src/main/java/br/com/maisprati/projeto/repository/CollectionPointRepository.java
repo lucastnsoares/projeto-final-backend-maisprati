@@ -36,11 +36,6 @@ public interface CollectionPointRepository extends JpaRepository<CollectionPoint
                )) AS distanceKm
         FROM collection_points cp
         WHERE cp.status = 'ACTIVE'
-          AND (:clothTypeIds IS NULL OR cp.id IN (
-              SELECT cpc.collection_point_id 
-              FROM collection_point_cloth_types cpc 
-              WHERE cpc.cloth_type_id IN (:clothTypeIds)
-          ))
           AND (6371 * acos(
                    LEAST(1.0, GREATEST(-1.0,
                        cos(radians(:userLat)) * cos(radians(cp.latitude::float8)) *
@@ -54,11 +49,6 @@ public interface CollectionPointRepository extends JpaRepository<CollectionPoint
         SELECT count(*)
         FROM collection_points cp
         WHERE cp.status = 'ACTIVE'
-          AND (:clothTypeIds IS NULL OR cp.id IN (
-              SELECT cpc.collection_point_id 
-              FROM collection_point_cloth_types cpc 
-              WHERE cpc.cloth_type_id IN (:clothTypeIds)
-          ))
           AND (6371 * acos(
                    LEAST(1.0, GREATEST(-1.0,
                        cos(radians(:userLat)) * cos(radians(cp.latitude::float8)) *
@@ -68,11 +58,68 @@ public interface CollectionPointRepository extends JpaRepository<CollectionPoint
                )) <= :radiusKm
         """,
         nativeQuery = true)
-    Page<CollectionPointDistanceProjectionDTO> findNearby(
+    Page<CollectionPointDistanceProjectionDTO> findNearbyNoClothTypes(
+            @Param("userLat") BigDecimal userLat,
+            @Param("userLng") BigDecimal userLng,
+            @Param("radiusKm") BigDecimal radiusKm,
+            Pageable pageable
+    );
+
+    @Query(value = """
+        SELECT cp.id AS id,
+               cp.name AS name,
+               CONCAT_WS(', ', cp.street, cp.number, cp.neighborhood, cp.city, cp.state) AS address,
+               cp.latitude AS latitude,
+               cp.longitude AS longitude,
+               (6371 * acos(
+                   LEAST(1.0, GREATEST(-1.0,
+                       cos(radians(:userLat)) * cos(radians(cp.latitude::float8)) *
+                       cos(radians(cp.longitude::float8) - radians(:userLng)) +
+                       sin(radians(:userLat)) * sin(radians(cp.latitude::float8))
+                   ))
+               )) AS distanceKm
+        FROM collection_points cp
+        WHERE cp.status = 'ACTIVE'
+          AND cp.id IN (
+              SELECT cpc.collection_point_id 
+              FROM collection_point_cloth_types cpc 
+              WHERE cpc.cloth_type_id IN (:clothTypeIds)
+          )
+          AND (6371 * acos(
+                   LEAST(1.0, GREATEST(-1.0,
+                       cos(radians(:userLat)) * cos(radians(cp.latitude::float8)) *
+                       cos(radians(cp.longitude::float8) - radians(:userLng)) +
+                       sin(radians(:userLat)) * sin(radians(cp.latitude::float8))
+                   ))
+               )) <= :radiusKm
+        ORDER BY distanceKm ASC
+        """,
+        countQuery = """
+        SELECT count(*)
+        FROM collection_points cp
+        WHERE cp.status = 'ACTIVE'
+          AND cp.id IN (
+              SELECT cpc.collection_point_id 
+              FROM collection_point_cloth_types cpc 
+              WHERE cpc.cloth_type_id IN (:clothTypeIds)
+          )
+          AND (6371 * acos(
+                   LEAST(1.0, GREATEST(-1.0,
+                       cos(radians(:userLat)) * cos(radians(cp.latitude::float8)) *
+                       cos(radians(cp.longitude::float8) - radians(:userLng)) +
+                       sin(radians(:userLat)) * sin(radians(cp.latitude::float8))
+                   ))
+               )) <= :radiusKm
+        """,
+        nativeQuery = true)
+    Page<CollectionPointDistanceProjectionDTO> findNearbyWithClothTypes(
             @Param("userLat") BigDecimal userLat,
             @Param("userLng") BigDecimal userLng,
             @Param("radiusKm") BigDecimal radiusKm,
             @Param ("clothTypeIds") List<Long> clothTypeIds,
             Pageable pageable
     );
+
+    @Query("SELECT cp.id, ct.name FROM CollectionPoint cp JOIN cp.clothTypes ct WHERE cp.id IN :ids")
+    List<Object[]> findClothTypesByCollectionPointIds(@Param("ids") List<Long> ids);
 }

@@ -1,5 +1,6 @@
 package br.com.maisprati.projeto.service;
 
+import br.com.maisprati.projeto.dto.projection.CollectionPointDistanceProjectionDTO;
 import br.com.maisprati.projeto.dto.request.CollectionPointCreateRequestDTO;
 import br.com.maisprati.projeto.dto.request.CollectionPointUpdateDTO;
 import br.com.maisprati.projeto.dto.request.OperatorCreateRequestDTO;
@@ -26,10 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -199,12 +197,43 @@ public class CollectionPointService {
                 BigDecimal effectiveRadius = (radiusKm != null && radiusKm > 0.0) ? new BigDecimal(radiusKm)
                         : new BigDecimal("15.0");
 
-                List<Long> effectiveClothTypeIds = (clothTypeIds != null && !clothTypeIds.isEmpty())
-                        ? clothTypeIds
-                        : null;
+                if (clothTypeIds == null || clothTypeIds.isEmpty()) {
+                        Page<CollectionPointDistanceProjectionDTO> projections = collectionPointRepository
+                                .findNearbyNoClothTypes(userLat, userLng, effectiveRadius, pageable);
+                        return bindClothTypesToResponseDTO(projections);
+                } else {
+                        Page<CollectionPointDistanceProjectionDTO> projections = collectionPointRepository
+                                .findNearbyWithClothTypes(userLat, userLng, effectiveRadius, clothTypeIds, pageable);
+                        return bindClothTypesToResponseDTO(projections);
+                }
+        }
 
-                return collectionPointRepository.findNearby(userLat, userLng, effectiveRadius, effectiveClothTypeIds, pageable)
-                        .map(CollectionPointDistanceResponseDTO::new);
+
+        private Page<CollectionPointDistanceResponseDTO> bindClothTypesToResponseDTO(Page<CollectionPointDistanceProjectionDTO> page) {
+                if (page.isEmpty()) {
+                        return Page.empty(page.getPageable());
+                }
+
+                // Coleta apenas os IDs dos pontos de coleta retornados na página específica
+                List<Long> ids = page.getContent().stream()
+                        .map(CollectionPointDistanceProjectionDTO::getId)
+                        .toList();
+
+                // Faz a consulta em lote
+                List<Object[]> clothTypesData = collectionPointRepository.findClothTypesByCollectionPointIds(ids);
+
+                // Agrupa o resultado em um Map<IdDoPonto, List<NomeDoTecido>>
+                Map<Long, List<String>> clothTypesMap = clothTypesData.stream()
+                        .collect(Collectors.groupingBy(
+                                row -> (Long) row[0],
+                                Collectors.mapping(row -> (String) row[1], Collectors.toList())
+                        ));
+
+                return page.map(projection -> {
+                        List<String> clothTypesNames = clothTypesMap.getOrDefault(projection.getId(), List.of());
+                        return new CollectionPointDistanceResponseDTO(projection, clothTypesNames);
+
+                });
         }
 
         @Transactional
