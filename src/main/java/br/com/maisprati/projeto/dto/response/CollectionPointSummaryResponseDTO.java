@@ -1,6 +1,7 @@
 package br.com.maisprati.projeto.dto.response;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import br.com.maisprati.projeto.model.entity.CollectionPoint;
 
@@ -10,16 +11,18 @@ public record CollectionPointSummaryResponseDTO(
     String status,
     String address,
     BigDecimal latitude,
-    BigDecimal longitude
+    BigDecimal longitude,
+    List<String> aceptedClothTypes
 ) {
-    public CollectionPointSummaryResponseDTO(CollectionPoint entity) {
+    public CollectionPointSummaryResponseDTO(CollectionPoint entity, List<String> clothTypes) {
         this(
             entity.getId(),
             entity.getName(),
             entity.getStatus().toString(),
             formatAddress(entity),
             entity.getAddress().getLatitude(),
-            entity.getAddress().getLongitude()
+            entity.getAddress().getLongitude(),
+            clothTypes
         );
     }
 

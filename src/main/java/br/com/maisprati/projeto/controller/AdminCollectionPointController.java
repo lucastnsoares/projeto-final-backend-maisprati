@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import br.com.maisprati.projeto.dto.request.CollectionPointUpdateDTO;
 import br.com.maisprati.projeto.service.CollectionPointService;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.web.PageableDefault;
@@ -25,7 +24,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;

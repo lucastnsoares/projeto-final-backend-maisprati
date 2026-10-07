@@ -43,8 +43,6 @@ public class CollectionPointService {
         private final CollectionPointPendingUpdateRepository pendingUpdateRepository;
         private final ClothTypeRepository clothTypeRepository;
         private final UserRepository userRepository;
-        private final RegisterUserService registerUserService;
-        private final UserValidationService userValidationService;
         private final CollectionPointMapper collectionPointMapper;
 
         private final ObjectMapper objectMapper = new ObjectMapper();
@@ -176,9 +174,32 @@ public class CollectionPointService {
                 return mapToDTO(collectionPoint);
         }
 
+        @Transactional(readOnly = true)
         public Page<CollectionPointSummaryResponseDTO> findAll(Pageable pageable) {
-                return collectionPointRepository.findAll(pageable)
-                        .map(CollectionPointSummaryResponseDTO::new);
+                return bindClothTypesToSummaryResponseDTO(collectionPointRepository.findAll(pageable));
+        }
+
+        private Page<CollectionPointSummaryResponseDTO> bindClothTypesToSummaryResponseDTO(Page<CollectionPoint> page) {
+                if (page.isEmpty()) {
+                        return Page.empty(page.getPageable());
+                }
+
+                List<Long> ids = page.getContent().stream()
+                        .map(CollectionPoint::getId)
+                        .toList();
+
+                List<Object[]> clothTypesData = collectionPointRepository.findClothTypesByCollectionPointIds(ids);
+
+                Map<Long, List<String>> clothTypesMap = clothTypesData.stream()
+                        .collect(Collectors.groupingBy(
+                                row -> (Long) row[0],
+                                Collectors.mapping(row -> (String) row[1], Collectors.toList())
+                        ));
+
+                return page.map(summary -> {
+                        List<String> clothTypesNames = clothTypesMap.getOrDefault(summary.getId(), List.of());
+                        return new CollectionPointSummaryResponseDTO(summary, clothTypesNames);
+                });
         }
 
         @Transactional(readOnly = true)
@@ -363,7 +384,7 @@ public class CollectionPointService {
                 String cleanDocument = operator.document().replaceAll("\\D", "");
 
                 User user = userRepository.findByDocument(cleanDocument)
-                        .orElseThrow(() -> new EntityNotFoundException("Operador não encontrado."));
+                        .orElseThrow(() -> new IllegalArgumentException("Operador não encontrado."));
 
                 if(user.getRole().stream().noneMatch(role -> role.equals("ROLE_PONTO_COLETA_OPERADOR"))) {
                         user.getRole().add(Role.PONTO_COLETA_OPERADOR);
@@ -371,8 +392,11 @@ public class CollectionPointService {
 
                 collectionPoint.getOperators().add(user);
                 CollectionPoint saved = collectionPointRepository.save(collectionPoint);
+                List<String> clothTypesNames = saved.getClothTypes().stream()
+                        .map(ClothType::getName)
+                        .collect(Collectors.toList());
                 return new CollectionPointUsersResponseDTO(
-                        new CollectionPointSummaryResponseDTO(saved),
+                        new CollectionPointSummaryResponseDTO(saved, clothTypesNames),
                         saved.getManagers().stream().map(UserSummaryResponseDTO::new).collect(Collectors.toSet()),
                         saved.getOperators().stream().map(UserSummaryResponseDTO::new).collect(Collectors.toSet())
                 );
@@ -395,7 +419,11 @@ public class CollectionPointService {
                         .map(UserSummaryResponseDTO::new)
                         .collect(Collectors.toSet());
 
-                CollectionPointSummaryResponseDTO collectionPointSummary = new CollectionPointSummaryResponseDTO(collectionPoint);
+                List<String> clothTypesNames = collectionPoint.getClothTypes().stream()
+                        .map(ClothType::getName)
+                        .collect(Collectors.toList());
+
+                CollectionPointSummaryResponseDTO collectionPointSummary = new CollectionPointSummaryResponseDTO(collectionPoint, clothTypesNames);
 
                 return new CollectionPointUsersResponseDTO(collectionPointSummary, managers, operators);
         }

@@ -7,9 +7,6 @@ import br.com.maisprati.projeto.model.entity.OperatingHour;
 import br.com.maisprati.projeto.util.StringNormalizer;
 import org.mapstruct.*;
 
-import java.time.DayOfWeek;
-import java.time.LocalTime;
-
 @Mapper(componentModel = "spring", uses = { StringNormalizer.class })
 public interface CollectionPointMapper {
 
