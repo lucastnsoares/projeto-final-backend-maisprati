@@ -33,9 +33,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/admin")
 @PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
-@Tag(name = "Administração de Usuários", description = "Gerenciamento e controle de acessos de contas pelo Administrador")
+@Tag(name = "Administração de Usuários", description = "Gerenciamento e controle de contas pelo Administrador")
 @SecurityRequirement(name = "bearerAuth")
-public class AdminController {
+public class AdminUserController {
     private final AdminService adminService;
     private final RegisterUserService registerUserService;
 
