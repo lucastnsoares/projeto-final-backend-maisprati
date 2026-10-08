@@ -2,6 +2,7 @@ package br.com.maisprati.projeto.service;
 
 import br.com.maisprati.projeto.dto.request.UserChangePasswordRequestDTO;
 import br.com.maisprati.projeto.dto.request.UserEditProfileRequestDTO;
+import br.com.maisprati.projeto.dto.response.UserAssociationsResponseDTO;
 import br.com.maisprati.projeto.dto.response.UserResponseDTO;
 import br.com.maisprati.projeto.dto.response.UserUpdatedResponseDTO;
 import br.com.maisprati.projeto.model.entity.User;
@@ -19,9 +20,10 @@ public class UserService {
     private final PasswordEncoder encoder;
     private final TokenService tokenService;
     private final UserValidationService userValidationService;
+    private final CollectionPointService collectionPointService;
 
     @Transactional
-    public void changePassword(User loggedInUser, UserChangePasswordRequestDTO dto){
+    public void changePassword(User loggedInUser, UserChangePasswordRequestDTO dto) {
         User user = userRepository.findById(loggedInUser.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado no banco de dados."));
         if (!encoder.matches(dto.currentPassword(), user.getPasswordHash())) {
@@ -32,7 +34,7 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public UserResponseDTO userData(User loggedInUser) {
+    public UserResponseDTO getUserData(User loggedInUser) {
         User user = userRepository.findById(loggedInUser.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado no banco de dados."));
         return new UserResponseDTO(user);
@@ -47,12 +49,26 @@ public class UserService {
             userValidationService.validateEmailUpdate(dto.email(), user.getEmail());
             user.setEmail(dto.email().toLowerCase());
         }
-        if (dto.name() != null && !dto.name().isBlank()) user.setName(dto.name().toUpperCase());
-        if (dto.phone() != null) user.setPhone(PhoneUtils.formatToE164(dto.phone()));
+        if (dto.name() != null && !dto.name().isBlank())
+            user.setName(dto.name().toUpperCase());
+        if (dto.phone() != null)
+            user.setPhone(PhoneUtils.formatToE164(dto.phone()));
 
         userRepository.saveAndFlush(user);
         String newToken = tokenService.generateToken(user);
 
         return new UserUpdatedResponseDTO(new UserResponseDTO(user), newToken);
     }
+
+    @Transactional(readOnly = true)
+    public UserAssociationsResponseDTO getUserAssociations(User loggedInUser) {
+        User user = userRepository.findById(loggedInUser.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado no banco de dados."));
+
+        var managedCollectionPoints = collectionPointService.getCollectionPointsByUserManager(user);
+        var operatedCollectionPoints = collectionPointService.getCollectionPointsByUserOperator(user);
+
+        return new UserAssociationsResponseDTO(loggedInUser.getId(), managedCollectionPoints, operatedCollectionPoints);
+    }
+
 }

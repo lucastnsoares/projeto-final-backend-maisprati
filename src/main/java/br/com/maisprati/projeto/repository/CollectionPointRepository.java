@@ -2,6 +2,7 @@ package br.com.maisprati.projeto.repository;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Repository;
 
 import br.com.maisprati.projeto.dto.projection.CollectionPointDistanceProjectionDTO;
 import br.com.maisprati.projeto.model.entity.CollectionPoint;
+import br.com.maisprati.projeto.model.entity.User;
 import br.com.maisprati.projeto.model.enums.CollectionPointStatus;
 
 @Repository
@@ -122,4 +124,8 @@ public interface CollectionPointRepository extends JpaRepository<CollectionPoint
 
     @Query("SELECT cp.id, ct.name FROM CollectionPoint cp JOIN cp.clothTypes ct WHERE cp.id IN :ids")
     List<Object[]> findClothTypesByCollectionPointIds(@Param("ids") List<Long> ids);
+
+    Set<CollectionPoint> findByManagersContainingAndStatusIn(User user, Set<CollectionPointStatus> statuses);
+
+    Set<CollectionPoint> findByOperatorsContainingAndStatusIn(User user, Set<CollectionPointStatus> statuses);
 }

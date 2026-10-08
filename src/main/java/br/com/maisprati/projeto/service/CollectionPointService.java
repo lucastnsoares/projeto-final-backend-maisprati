@@ -100,6 +100,8 @@ public class CollectionPointService {
 
                         collectionPoint.getOperatingHours().addAll(operatingHours);
                 }
+                collectionPoint.setHasPendingUpdate(false);
+                collectionPoint.setStatus(CollectionPointStatus.PENDING); 
 
                 CollectionPoint saved = collectionPointRepository.save(collectionPoint);
                 return mapToDTO(saved);
@@ -402,6 +404,7 @@ public class CollectionPointService {
                 );
         }
 
+        @Transactional(readOnly = true)
         public CollectionPointUsersResponseDTO getOperatorsByCollectionPointId(Long id, String managerEmail) {
                 CollectionPoint collectionPoint = collectionPointRepository.findById(id)
                         .orElseThrow(() -> new IllegalArgumentException("Ponto de coleta não encontrado."));
@@ -426,6 +429,22 @@ public class CollectionPointService {
                 CollectionPointSummaryResponseDTO collectionPointSummary = new CollectionPointSummaryResponseDTO(collectionPoint, clothTypesNames);
 
                 return new CollectionPointUsersResponseDTO(collectionPointSummary, managers, operators);
+        }
+
+        @Transactional(readOnly = true)
+        public Set<AssociationResponseDTO> getCollectionPointsByUserManager(User user) {
+                Set<CollectionPoint> managedPoints = collectionPointRepository.findByManagersContainingAndStatusIn(user, Set.of(CollectionPointStatus.ACTIVE, CollectionPointStatus.PENDING));
+                return managedPoints.stream()
+                        .map(AssociationResponseDTO::new)
+                        .collect(Collectors.toSet());
+        }
+
+        @Transactional(readOnly = true)
+        public Set<AssociationResponseDTO> getCollectionPointsByUserOperator(User user) {
+                Set<CollectionPoint> operatedPoints = collectionPointRepository.findByOperatorsContainingAndStatusIn(user, );
+                return operatedPoints.stream()
+                        .map(AssociationResponseDTO::new)
+                        .collect(Collectors.toSet());
         }
 
         private CollectionPointResponseDTO mapToDTO(CollectionPoint entity) {
