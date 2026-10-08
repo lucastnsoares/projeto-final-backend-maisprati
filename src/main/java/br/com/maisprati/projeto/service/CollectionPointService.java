@@ -441,7 +441,7 @@ public class CollectionPointService {
 
         @Transactional(readOnly = true)
         public Set<AssociationResponseDTO> getCollectionPointsByUserOperator(User user) {
-                Set<CollectionPoint> operatedPoints = collectionPointRepository.findByOperatorsContainingAndStatusIn(user, );
+                Set<CollectionPoint> operatedPoints = collectionPointRepository.findByOperatorsContainingAndStatusIn(user, Set.of(CollectionPointStatus.ACTIVE, CollectionPointStatus.PENDING));
                 return operatedPoints.stream()
                         .map(AssociationResponseDTO::new)
                         .collect(Collectors.toSet());
