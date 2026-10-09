@@ -4,7 +4,6 @@ import br.com.maisprati.projeto.dto.request.PostCreateRequestDTO;
 import br.com.maisprati.projeto.dto.request.PostDeleteRequestDTO;
 import br.com.maisprati.projeto.dto.request.PostEditRequestDTO;
 import br.com.maisprati.projeto.dto.response.PostResponseDTO;
-import br.com.maisprati.projeto.dto.response.PostSummaryResponseDTO;
 import br.com.maisprati.projeto.dto.response.AdminPostResponseDTO;
 import br.com.maisprati.projeto.dto.response.AdminPostSummaryResponseDTO;
 import br.com.maisprati.projeto.dto.response.ErrorResponseDTO;

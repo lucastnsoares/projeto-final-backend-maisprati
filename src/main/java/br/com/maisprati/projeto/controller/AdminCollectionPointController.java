@@ -32,7 +32,7 @@ import java.net.URI;
 @RequestMapping("/admin/collection-points")
 @SecurityRequirement(name = "bearerAuth")
 @PreAuthorize("hasRole('ADMIN')")
-@RequiredArgsConstructor
+@RequiredArgsConstructor 
 @Tag(name = "Administração de Pontos de Coleta", description = "Endpoints para gerenciamento de pontos de coleta pelo administrador")
 public class AdminCollectionPointController {
 
@@ -64,30 +64,77 @@ public class AdminCollectionPointController {
     }
 
     @GetMapping
+    @Operation(summary = "Listar pontos de coleta", description = "Retorna uma lista paginada de pontos de coleta.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Pontos de coleta listados com sucesso.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = CollectionPointSummaryResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "Token de autenticação ausente ou inválido.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Acesso negado. Requer perfil ADMIN.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+    })
     public ResponseEntity<Page<CollectionPointSummaryResponseDTO>> findAll(
             @ParameterObject @PageableDefault(page = 0, size = 10, sort = "name", direction = Sort.Direction.ASC) Pageable pageable) {
         return ResponseEntity.ok(collectionPointService.findAll(pageable));
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Buscar ponto de coleta por ID", description = "Retorna os dados detalhados de um ponto de coleta.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Ponto de coleta encontrado com sucesso.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = CollectionPointResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "Token de autenticação ausente ou inválido.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Acesso negado. Requer perfil ADMIN.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Ponto de coleta não encontrado.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+    })
     public ResponseEntity<CollectionPointResponseDTO> getCollectionPointById(@PathVariable Long id) {
         return ResponseEntity.ok().body(collectionPointService.getCollectionPointById(id));
     }
 
     @GetMapping("/pending-updates")
     @Operation(summary = "Listar edições pendentes", description = "Retorna os pontos de coleta que aguardam aprovação de edição (hasPendingUpdate = true).")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Edições pendentes listadas com sucesso.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = PendingUpdateResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "Token de autenticação ausente ou inválido.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Acesso negado. Requer perfil ADMIN.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+    })
     public ResponseEntity<Page<PendingUpdateResponseDTO>> getPendingUpdates(@ParameterObject Pageable pageable) {
         return ResponseEntity.ok(collectionPointService.listPendingUpdates(pageable));
     }
 
     @PostMapping("/{id}/approve-update")
     @Operation(summary = "Aprovar edição de um ponto", description = "Aplica as alterações propostas por um gerente ao ponto de coleta.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Edição aprovada com sucesso.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = CollectionPointResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "Token de autenticação ausente ou inválido.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Acesso negado. Requer perfil ADMIN.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Ponto de coleta ou edição pendente não encontrado.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+    })
     public ResponseEntity<CollectionPointResponseDTO> approvePendingUpdate(@PathVariable Long id) {
         return ResponseEntity.ok(collectionPointService.approvePendingUpdate(id));
     }
 
     @PostMapping("/{id}/reject-update")
     @Operation(summary = "Rejeitar edição de um ponto", description = "Descarta as alterações propostas e remove o status pendente.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Edição rejeitada com sucesso."),
+            @ApiResponse(responseCode = "401", description = "Token de autenticação ausente ou inválido.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Acesso negado. Requer perfil ADMIN.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Ponto de coleta ou edição pendente não encontrado.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+    })
     public ResponseEntity<Void> rejectPendingUpdate(@PathVariable Long id) {
         collectionPointService.rejectPendingUpdate(id);
         return ResponseEntity.noContent().build();
@@ -111,6 +158,10 @@ public class AdminCollectionPointController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Ponto de coleta aprovado com sucesso.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = CollectionPointResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "Token de autenticação ausente ou inválido.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Acesso negado. Requer perfil ADMIN.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
             @ApiResponse(responseCode = "404", description = "Ponto de coleta não encontrado.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
     })
@@ -121,6 +172,16 @@ public class AdminCollectionPointController {
     }
 
     @Operation(summary = "Rejeitar ponto de coleta", description = "Altera o status do ponto para REJECTED.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Ponto de coleta rejeitado com sucesso.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = CollectionPointResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "Token de autenticação ausente ou inválido.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Acesso negado. Requer perfil ADMIN.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Ponto de coleta não encontrado.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+    })
     @PatchMapping("/{id}/reject")
     public ResponseEntity<CollectionPointResponseDTO> rejectCollectionPoint(@PathVariable Long id) {
         CollectionPointResponseDTO response = collectionPointService.rejectCollectionPoint(id);
@@ -130,6 +191,16 @@ public class AdminCollectionPointController {
     @PatchMapping("/{id}/pause")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Pausar recebimento do ponto de coleta", description = "Permite que um gerente/proprietário do ponto altere o status para PAUSED.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Recebimento pausado com sucesso.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = CollectionPointResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "Token de autenticação ausente ou inválido.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Acesso negado para o usuário atual.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Ponto de coleta não encontrado.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+    })
     public ResponseEntity<CollectionPointResponseDTO> pauseCollectionPoint(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
 
         CollectionPointResponseDTO response = collectionPointService.pauseCollectionPoint(id, userDetails.getUsername());
@@ -139,6 +210,16 @@ public class AdminCollectionPointController {
     @GetMapping("/{id}/users")
     @PreAuthorize("hasAnyRole('PONTO_COLETA_GERENTE', 'ADMIN')")
     @Operation(summary = "Listar operadores e gerentes de um ponto de coleta", description = "Permite listar todos os operadores e gerentes associados a um ponto de coleta específico, desde que o usuário autenticado seja um gerente do ponto ou um administrador.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Usuários do ponto de coleta listados com sucesso.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = CollectionPointUsersResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "Token de autenticação ausente ou inválido.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Acesso negado. Requer perfil de gerente do ponto ou ADMIN.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Ponto de coleta não encontrado.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+    })
     public ResponseEntity<CollectionPointUsersResponseDTO> getOperatorsByCollectionPointId(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(collectionPointService.getOperatorsByCollectionPointId(id, userDetails.getUsername()));
     }
@@ -147,6 +228,18 @@ public class AdminCollectionPointController {
     @PatchMapping ("/{id}/users/operators")
     @PreAuthorize("hasAnyRole('PONTO_COLETA_GERENTE', 'ADMIN')")
     @Operation(summary = "Adicionar operador a um ponto de coleta", description = "Permite adicionar um operador a um ponto de coleta específico.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Operador adicionado com sucesso.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = CollectionPointUsersResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Erro de validação nos dados do operador.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ValidationErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "Token de autenticação ausente ou inválido.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Acesso negado. Requer perfil de gerente do ponto ou ADMIN.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Ponto de coleta ou operador não encontrado.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+    })
     public ResponseEntity<CollectionPointUsersResponseDTO> addOperatorToCollectionPoint(
             @PathVariable Long id,
             @RequestBody OperatorCreateRequestDTO operator,

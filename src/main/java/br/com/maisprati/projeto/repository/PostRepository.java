@@ -1,5 +1,6 @@
 package br.com.maisprati.projeto.repository;
 
+import br.com.maisprati.projeto.model.entity.Category;
 import br.com.maisprati.projeto.model.entity.Post;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -69,4 +70,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             @Param("tags") Set<String> tags,
             Pageable pageable
     );
+    
+    Boolean existsByCategory(Category category);
 }

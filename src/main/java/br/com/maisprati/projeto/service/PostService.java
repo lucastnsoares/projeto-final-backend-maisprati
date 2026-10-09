@@ -251,4 +251,9 @@ public class PostService {
         return slug.toLowerCase(Locale.ENGLISH).replaceAll("-{2,}", "-").replaceAll("^-|-$", "");
     }
 
+    @Transactional(readOnly = true)
+    public Boolean existsByCategory(Category category) {
+        return postRepository.existsByCategory(category);
+    }
+
 }
